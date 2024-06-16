@@ -1,0 +1,37 @@
+[project.urls]
+repository = "https://github.com/Tremeschin/TurboPipe"
+homepage   = "https://github.com/Tremeschin/TurboPipe"
+issues     = "https://github.com/Tremeschin/TurboPipe/issues"
+
+[project]
+name         = "turbopipe"
+version      = "1.0.0"
+description  = "Faster ModernGL inter process Buffer data transfers"
+authors      = [{name="Tremeschin", email="29046864+Tremeschin@users.noreply.github.com"}]
+readme       = "Readme.md"
+license      = {file="License.md"}
+dependencies = ["moderngl"]
+requires-python = ">=3.7"
+
+[tool.setuptools]
+packages = ["turbopipe"]
+
+[tool.rye]
+managed = true
+dev-dependencies = [
+    "hatch-cython>=0.5.1"
+]
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[tool.hatch.build.targets.wheel]
+only-include = ["turbopipe"]
+include = ["turbopipe/**"]
+packages = ["turbopipe"]
+macos-max-compat = false
+
+[tool.hatch.build.targets.sdist]
+exclude = ["*"]
+
