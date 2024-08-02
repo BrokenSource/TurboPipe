@@ -1,13 +1,25 @@
 from io import IOBase
 
-import turbopipe_cpp
 from moderngl import Buffer
 
+from turbopipe import _turbopipe
 
-def read(buffer: Buffer, target: IOBase, size: int=-1) -> None:
-    if hasattr(target, "fileno"):
-        target = target.fileno()
-    turbopipe_cpp.read(buffer, target, size)
 
-def sync(stop: bool=False) -> None:
-    turbopipe_cpp.sync(stop)
+def pipe(buffer: Buffer, file: IOBase) -> None:
+    if hasattr(file, "fileno"):
+        file = file.fileno()
+    _turbopipe.pipe(buffer.mglo, file)
+
+def sync() -> None:
+    """Waits for all jobs to finish"""
+    _turbopipe.sync()
+
+def close() -> None:
+    """Syncs and deletes objects"""
+    _turbopipe.close()
+
+__all__ = [
+    "pipe",
+    "sync",
+    "close"
+]

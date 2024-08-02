@@ -3,26 +3,22 @@ import platform
 from setuptools import Extension, find_packages, setup
 
 target = platform.system().lower()
+extra_compile_args = dict(
+    windows = ["-fpermissive"],
+    linux   = ["-fpermissive"],
+    darwin  = ["-fpermissive", "-Wno-deprecated-declarations"]
+)
 
-extra_compile_args = {
-    "windows": ["-fpermissive"],
-    "linux": ["-fpermissive"],
-    "cygwin": ["-fpermissive"],
-    "darwin": ["-Wno-deprecated-declarations"],
-    "android": ["-fpermissive"],
-}
-
-setup_args = dict(
+setup(
     name="turbopipe",
     packages=find_packages(),
     ext_modules=[
         Extension(
-            name="turbopipe_cpp",
-            extra_compile_args=extra_compile_args[target],
-            sources=["turbopipe/turbopipe.cpp"],
+            "turbopipe._turbopipe",
+            sources=["turbopipe/_turbopipe.cpp"],
             include_dirs=["include"],
+            extra_compile_args=extra_compile_args.get(target, []),
+            language="c++"
         )
-    ]
+    ],
 )
-
-setup(**setup_args)

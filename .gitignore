@@ -1,0 +1,4 @@
+turbopipe.egg*
+build*
+.venv
+*.so
