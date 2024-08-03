@@ -60,7 +60,7 @@ jobs:
 
   publish:
     needs: [sdist, wheels]
-    if: github.event_name == 'push' && contains(github.event.head_commit.modified, 'turbopipe/version.py')
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, 'Deploy release')
     name: Publish to PyPI
     runs-on: ubuntu-latest
 
