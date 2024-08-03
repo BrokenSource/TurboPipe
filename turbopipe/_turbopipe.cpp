@@ -231,7 +231,7 @@ static PyObject* turbopipe_close(
 static void turbopipe_exit() {
     turbopipe->close();
 }
-// line 225
+
 static PyMethodDef TurboPipeMethods[] = {
     {"pipe",  (PyCFunction) turbopipe_pipe,  METH_VARARGS, ""},
     {"sync",  (PyCFunction) turbopipe_sync,  METH_NOARGS,  ""},
