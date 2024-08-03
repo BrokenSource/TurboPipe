@@ -170,7 +170,7 @@ class Benchmark:
 
                     # Calculate the gain%
                     if index != 0:
-                        baseline = float(self.table.iloc[-index]['Framerate'])
+                        baseline = float(self.table.iloc[-index]['Framerate'].split()[0])
                         gain = (float(statistics.average_fps) - baseline) / baseline * 100
 
                     self.table = self.table._append({
