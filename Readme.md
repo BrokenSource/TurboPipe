@@ -95,65 +95,65 @@ ffmpeg.wait()
     <summary><b>Desktop</b> • (AMD Ryzen 9 5900x) • (NVIDIA RTX 3060 12 GB) • (DDR4 2x32 GB 3200 MT/s) • (Arch Linux)</summary>
     <br>
 
-| 720p | x264      |   Buffers | Framerate | Bandwidth   | Gain    |
-|:----:|:----------|:---------:|----------:|------------:|--------:|
-| 🐢   | Null      |         1 |   883 fps | 2.44 GB/s   |         |
-| 🚀   | Null      |         1 |   843 fps | 2.33 GB/s   | -4.42%  |
-| 🌀   | Null      |         1 |  1125 fps | 3.11 GB/s   | 27.49%  |
-| 🐢   | Null      |         4 |   845 fps | 2.34 GB/s   |         |
-| 🚀   | Null      |         4 |   773 fps | 2.14 GB/s   | -8.49%  |
-| 🌀   | Null      |         4 |  1351 fps | 3.74 GB/s   | 59.82%  |
-| 🐢   | ultrafast |         4 |   657 fps | 1.82 GB/s   |         |
-| 🚀   | ultrafast |         4 |   642 fps | 1.78 GB/s   | -2.30%  |
-| 🌀   | ultrafast |         4 |  1011 fps | 2.80 GB/s   | 53.68%  |
-| 🐢   | slow      |         4 |   206 fps | 0.57 GB/s   |         |
-| 🚀   | slow      |         4 |   207 fps | 0.57 GB/s   | 0.81%   |
-| 🌀   | slow      |         4 |   211 fps | 0.58 GB/s   | 2.43%   |
+| 720p | x264      |   Buffers | Framerate | Bandwidth   | Gain     |
+|:----:|:----------|:---------:|----------:|------------:|---------:|
+| 🐢   | Null      |         1 |   882 fps | 2.44 GB/s   |          |
+| 🚀   | Null      |         1 |   793 fps | 2.19 GB/s   | -10.04%  |
+| 🌀   | Null      |         1 |  1911 fps | 5.28 GB/s   | 116.70%  |
+| 🐢   | Null      |         4 |   818 fps | 2.26 GB/s   |          |
+| 🚀   | Null      |         4 |   684 fps | 1.89 GB/s   | -16.35%  |
+| 🌀   | Null      |         4 |  1494 fps | 4.13 GB/s   | 82.73%   |
+| 🐢   | ultrafast |         4 |   664 fps | 1.84 GB/s   |          |
+| 🚀   | ultrafast |         4 |   635 fps | 1.76 GB/s   | -4.33%   |
+| 🌀   | ultrafast |         4 |   869 fps | 2.40 GB/s   | 31.00%   |
+| 🐢   | slow      |         4 |   204 fps | 0.57 GB/s   |          |
+| 🚀   | slow      |         4 |   205 fps | 0.57 GB/s   | 0.58%    |
+| 🌀   | slow      |         4 |   208 fps | 0.58 GB/s   | 2.22%    |
 
 | 1080p | x264      |   Buffers | Framerate | Bandwidth   | Gain    |
 |:-----:|:----------|:---------:|----------:|------------:|--------:|
-| 🐢    | Null      |         1 |   348 fps | 2.17 GB/s   |         |
-| 🚀    | Null      |         1 |   390 fps | 2.43 GB/s   | 11.97%  |
-| 🌀    | Null      |         1 |   732 fps | 4.56 GB/s   | 110.17% |
-| 🐢    | Null      |         4 |   385 fps | 2.40 GB/s   |         |
-| 🚀    | Null      |         4 |   383 fps | 2.39 GB/s   | -0.30%  |
-| 🌀    | Null      |         4 |   696 fps | 4.33 GB/s   | 80.90%  |
-| 🐢    | ultrafast |         4 |   282 fps | 1.76 GB/s   |         |
-| 🚀    | ultrafast |         4 |   270 fps | 1.68 GB/s   | -4.18%  |
-| 🌀    | ultrafast |         4 |   403 fps | 2.51 GB/s   | 42.81%  |
-| 🐢    | slow      |         4 |   119 fps | 0.74 GB/s   |         |
-| 🚀    | slow      |         4 |   123 fps | 0.77 GB/s   | 3.62%   |
-| 🌀    | slow      |         4 |   123 fps | 0.77 GB/s   | 3.48%   |
+| 🐢    | Null      |         1 |   385 fps | 2.40 GB/s   |         |
+| 🚀    | Null      |         1 |   369 fps | 2.30 GB/s   | -3.91%  |
+| 🌀    | Null      |         1 |   641 fps | 3.99 GB/s   | 66.54%  |
+| 🐢    | Null      |         4 |   387 fps | 2.41 GB/s   |         |
+| 🚀    | Null      |         4 |   359 fps | 2.23 GB/s   | -7.21%  |
+| 🌀    | Null      |         4 |   632 fps | 3.93 GB/s   | 63.40%  |
+| 🐢    | ultrafast |         4 |   272 fps | 1.70 GB/s   |         |
+| 🚀    | ultrafast |         4 |   266 fps | 1.66 GB/s   | -2.14%  |
+| 🌀    | ultrafast |         4 |   405 fps | 2.53 GB/s   | 49.24%  |
+| 🐢    | slow      |         4 |   117 fps | 0.73 GB/s   |         |
+| 🚀    | slow      |         4 |   122 fps | 0.76 GB/s   | 4.43%   |
+| 🌀    | slow      |         4 |   124 fps | 0.77 GB/s   | 6.48%   |
 
 | 1440p | x264      |   Buffers | Framerate | Bandwidth   | Gain    |
 |:-----:|:----------|:---------:|----------:|------------:|--------:|
-| 🐢    | Null      |         1 |   166 fps | 1.84 GB/s   |         |
-| 🚀    | Null      |         1 |   240 fps | 2.66 GB/s   | 44.24%  |
-| 🌀    | Null      |         1 |   388 fps | 4.30 GB/s   | 133.05% |
-| 🐢    | Null      |         4 |   226 fps | 2.51 GB/s   |         |
-| 🚀    | Null      |         4 |   207 fps | 2.29 GB/s   | -8.61%  |
-| 🌀    | Null      |         4 |   494 fps | 5.47 GB/s   | 117.82% |
-| 🐢    | ultrafast |         4 |   145 fps | 1.61 GB/s   |         |
-| 🚀    | ultrafast |         4 |   154 fps | 1.71 GB/s   | 5.93%   |
-| 🌀    | ultrafast |         4 |   227 fps | 2.51 GB/s   | 55.76%  |
-| 🐢    | slow      |         4 |    75 fps | 0.83 GB/s   |         |
-| 🚀    | slow      |         4 |    78 fps | 0.87 GB/s   | 4.94%   |
-| 🌀    | slow      |         4 |    80 fps | 0.90 GB/s   | 7.74%   |
+| 🐢    | Null      |         1 |   204 fps | 2.26 GB/s   |         |
+| 🚀    | Null      |         1 |   241 fps | 2.67 GB/s   | 18.49%  |
+| 🌀    | Null      |         1 |   297 fps | 3.29 GB/s   | 45.67%  |
+| 🐢    | Null      |         4 |   230 fps | 2.54 GB/s   |         |
+| 🚀    | Null      |         4 |   235 fps | 2.61 GB/s   | 2.52%   |
+| 🌀    | Null      |         4 |   411 fps | 4.55 GB/s   | 78.97%  |
+| 🐢    | ultrafast |         4 |   146 fps | 1.62 GB/s   |         |
+| 🚀    | ultrafast |         4 |   153 fps | 1.70 GB/s   | 5.21%   |
+| 🌀    | ultrafast |         4 |   216 fps | 2.39 GB/s   | 47.96%  |
+| 🐢    | slow      |         4 |    73 fps | 0.82 GB/s   |         |
+| 🚀    | slow      |         4 |    78 fps | 0.86 GB/s   | 7.06%   |
+| 🌀    | slow      |         4 |    79 fps | 0.88 GB/s   | 9.27%   |
 
-| 2160p | x264      |   Buffers | Framerate | Bandwidth   | Gain    |
-|:-----:|:----------|:---------:|----------:|------------:|--------:|
-| 🐢    | Null      |         1 |    86 fps | 2.24 GB/s   |         |
-| 🚀    | Null      |         1 |   111 fps | 2.88 GB/s   | 28.60%  |
-| 🌀    | Null      |         1 |   210 fps | 5.44 GB/s   | 142.88% |
-| 🐢    | Null      |         4 |    77 fps | 1.99 GB/s   |         |
-| 🚀    | Null      |         4 |   108 fps | 2.80 GB/s   | 40.55%  |
-| 🌀    | Null      |         4 |   211 fps | 5.44 GB/s   | 173.40% |
-| 🐢    | ultrafast |         4 |    59 fps | 1.53 GB/s   |         |
-| 🚀    | ultrafast |         4 |    69 fps | 1.80 GB/s   | 17.86%  |
-| 🌀    | ultrafast |         4 |    97 fps | 2.51 GB/s   | 63.71%  |
-| 🐢    | slow      |         4 |    38 fps | 0.98 GB/s   |         |
-| 🚀    | slow      |         4 |    45 fps | 1.18 GB/s   | 20.31%  |
-| 🌀    | slow      |         4 |    45 fps | 1.18 GB/s   | 19.63%  |
+| 2160p | x264      |   Buffers | Framerate | Bandwidth   | Gain     |
+|:-----:|:----------|:---------:|----------:|------------:|---------:|
+| 🐢    | Null      |         1 |    81 fps | 2.03 GB/s   |          |
+| 🚀    | Null      |         1 |   107 fps | 2.67 GB/s   | 32.26%   |
+| 🌀    | Null      |         1 |   213 fps | 5.31 GB/s   | 163.47%  |
+| 🐢    | Null      |         4 |    87 fps | 2.18 GB/s   |          |
+| 🚀    | Null      |         4 |   109 fps | 2.72 GB/s   | 25.43%   |
+| 🌀    | Null      |         4 |   212 fps | 5.28 GB/s   | 143.72%  |
+| 🐢    | ultrafast |         4 |    59 fps | 1.48 GB/s   |          |
+| 🚀    | ultrafast |         4 |    67 fps | 1.68 GB/s   | 14.46%   |
+| 🌀    | ultrafast |         4 |    95 fps | 2.39 GB/s   | 62.66%   |
+| 🐢    | slow      |         4 |    37 fps | 0.94 GB/s   |          |
+| 🚀    | slow      |         4 |    43 fps | 1.07 GB/s   | 16.22%   |
+| 🌀    | slow      |         4 |    44 fps | 1.11 GB/s   | 20.65%   |
 
 </details>
 
