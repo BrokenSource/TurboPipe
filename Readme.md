@@ -23,7 +23,7 @@ The **optimizations** involved are:
     - Doesn't block Python code execution, allows to render next frame
     - Decouples the main thread from the I/O thread for performance
 
-✅ Don't worry, there's proper **safety** and **signaling** in place. TurboPipe will block Python if a memory address is already queued for writing, and guarantees order of writes per file-descriptor. Just call `.sync()` whenever you're done 😉
+✅ Don't worry, there's proper **safety** in place. TurboPipe will block Python if a memory address is already queued for writing, and guarantees order of writes per file-descriptor. Just call `.sync()` when done 😉
 
 <br>
 
@@ -42,7 +42,7 @@ rye add turbopipe
 
 # 🚀 Usage
 
-See also the [**Examples**](examples) folder for more controlled usage, and [ShaderFlow](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
+See also the [**Examples**](examples) folder for more controlled usage, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
 
 ```python
 import subprocess
@@ -168,13 +168,13 @@ ffmpeg.wait()
 
 # 🌀 Conclusion
 
-TurboPipe significantly increases the feeding speed of FFmpeg with data, especially at higher resolutions. However, if there's few CPU compute available, or the video is too hard to encode (slow preset, noise video), the gains are insignificant over the other methods (bottleneck). Multi-buffering didn't prove to have an advantage, debugging shows that TurboPipe C++ is often starved of data to write (as the file stream is buffered on the OS most likely), and the context switching, or cache misses, might be the cause of the slowdown.
+TurboPipe significantly increases the feeding speed of FFmpeg with data, especially at higher resolutions. However, if there's few CPU compute available, or the video is too hard to encode (slow preset), the gains are insignificant over the other methods (bottleneck). Multi-buffering didn't prove to have an advantage, debugging shows that TurboPipe C++ is often starved of data to write (as the file stream is buffered on the OS most likely), and the context switching, or cache misses, might be the cause of the slowdown.
 
 Interestingly, due either Linux's scheduler on AMD Ryzen CPUs, or their operating philosophy, it was experimentally seen that Ryzen's frenetic thread switching degrades a bit the single thread performance, which can be _"fixed"_ with prepending the command with `taskset --cpu 0,2` (not recommended at all), comparatively speaking to Windows performance on the same system (Linux 🚀 = Windows 🐢). This can also be due the topology of tested CPUs having more than one Core Complex Die (CCD). Intel CPUs seem to stick to the same thread for longer, which makes the Python threaded method an unecessary overhead.
 
 ### Personal experience
 
-Under realistically loads, like [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow)'s default lightweight shader video export, TurboPipe increases rendering speed from 1080p260 to 1080p330 on my system, with mid 80% cpu usage than low 60%s. And for [**DepthFlow**](https://github.com/BrokenSource/ShaderFlow)'s default depth video export, no gains are seen, as the CPU is almost saturated encoding at 1080p130.
+On realistically loads, like [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow)'s default lightweight shader export, TurboPipe increases rendering speed from 1080p260 to 1080p330 on my system, with mid 80% CPU usage than low 60%s. For [**DepthFlow**](https://github.com/BrokenSource/ShaderFlow)'s default depth video export, no gains are seen, as the CPU is almost saturated encoding at 1080p130.
 
 </div>
 
