@@ -135,7 +135,7 @@ private:
 
         unique_lock<mutex> lock(mutexes[file]);
 
-        // Notify this hash is queued
+        // Notify this hash is queued, wait if pending
         if (!queue[file].insert(hash).second) {
             pending[file][hash].wait(lock, [this, file, hash] {
                 return queue[file].find(hash) == queue[file].end();
@@ -156,16 +156,16 @@ private:
     }
 
     void worker(int file) {
-        while (running) {
+        while (this->running) {
             unique_lock<mutex> lock(mutexes[file]);
 
             signal.wait(lock, [this, file] {
-                return (!stream[file].empty() || !running);
+                return (!stream[file].empty() || !this->running);
             });
 
             // Skip on false positives, exit condition
             if (stream[file].empty()) continue;
-            if (!running) break;
+            if (!this->running) break;
 
             // Get the next work item
             Work work = stream[file].front();
@@ -197,7 +197,10 @@ static TurboPipe* turbopipe = nullptr;
 // ------------------------------------------------------------------------------------------------|
 // End user methods
 
-static PyObject* turbopipe_pipe(PyObject* self, PyObject* args) {
+static PyObject* turbopipe_pipe(
+    PyObject* Py_UNUSED(self),
+    PyObject* args
+) {
     PyObject* buffer;
     PyObject* file;
     if (!PyArg_ParseTuple(args, "OO", &buffer, &file))
@@ -206,27 +209,33 @@ static PyObject* turbopipe_pipe(PyObject* self, PyObject* args) {
     Py_RETURN_NONE;
 }
 
-static PyObject* turbopipe_sync(PyObject* self, PyObject* args) {
+static PyObject* turbopipe_sync(
+    PyObject* Py_UNUSED(self),
+    PyObject* Py_UNUSED(args)
+) {
     turbopipe->sync();
     Py_RETURN_NONE;
 }
 
-static PyObject* turbopipe_close(PyObject* self, PyObject* args) {
+static PyObject* turbopipe_close(
+    PyObject* Py_UNUSED(self),
+    PyObject* Py_UNUSED(args)
+) {
     turbopipe->close();
     Py_RETURN_NONE;
-}
-
-static void turbopipe_exit() {
-    turbopipe->close();
 }
 
 // ------------------------------------------------------------------------------------------------|
 // Python module definition
 
+static void turbopipe_exit() {
+    turbopipe->close();
+}
+// line 225
 static PyMethodDef TurboPipeMethods[] = {
-    {"pipe",  turbopipe_pipe,  METH_VARARGS, ""},
-    {"sync",  turbopipe_sync,  METH_NOARGS,  ""},
-    {"close", turbopipe_close, METH_NOARGS,  ""},
+    {"pipe",  (PyCFunction) turbopipe_pipe,  METH_VARARGS, ""},
+    {"sync",  (PyCFunction) turbopipe_sync,  METH_NOARGS,  ""},
+    {"close", (PyCFunction) turbopipe_close, METH_NOARGS,  ""},
     {NULL, NULL, 0, NULL}
 };
 
@@ -234,7 +243,8 @@ static struct PyModuleDef turbopipe_module = {
     PyModuleDef_HEAD_INIT,
     "_turbopipe",
     NULL, -1,
-    TurboPipeMethods
+    TurboPipeMethods,
+    NULL, NULL, NULL, NULL
 };
 
 PyMODINIT_FUNC PyInit__turbopipe(void) {

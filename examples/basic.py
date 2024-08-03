@@ -1,4 +1,5 @@
 import contextlib
+import random
 import subprocess
 from typing import Generator
 
@@ -7,9 +8,9 @@ import tqdm
 import turbopipe
 
 # User constants
-WIDTH, HEIGHT = 1920, 1080
+WIDTH, HEIGHT = (1920, 1080)
 FRAMERATE = 60
-DURATION = 60
+DURATION = 30
 
 # Calculate constants
 BYTES_PER_FRAME = (WIDTH * HEIGHT * 3)
@@ -19,7 +20,9 @@ TOTAL_BYTES = (BYTES_PER_FRAME * TOTAL_FRAMES)
 # Create ModernGL objects
 ctx = moderngl.create_standalone_context()
 buffer = ctx.buffer(reserve=BYTES_PER_FRAME)
-print(len(buffer.read()))
+
+# Let's play fair and avoid any OS/Python/Hardware optimizations
+buffer.write(bytearray(random.getrandbits(8) for _ in range(BYTES_PER_FRAME)))
 
 # -------------------------------------------------------------------------------------------------|
 
@@ -27,7 +30,7 @@ print(len(buffer.read()))
 def FFmpeg() -> Generator[subprocess.Popen, None, None]:
     try:
         ffmpeg = subprocess.Popen([
-            "nice", "-20", "ffmpeg",
+            "ffmpeg",
             "-hide_banner",
             "-loglevel", "error",
             "-f", "rawvideo",
@@ -57,20 +60,20 @@ def Progress():
 
 # -------------------------------------------------------------------------------------------------|
 
-print("\n::Traditional method\n")
+print("\n:: Traditional method\n")
 
 with Progress() as progress, FFmpeg() as ffmpeg:
     for frame in range(TOTAL_FRAMES):
         ffmpeg.stdin.write(buffer.read())
         progress()
-    turbopipe.sync()
-
 
 print("\n:: TurboPipe method\n")
 
 with Progress() as progress, FFmpeg() as ffmpeg:
+    fileno = ffmpeg.stdin.fileno()
+
     for frame in range(TOTAL_FRAMES):
-        turbopipe.pipe(buffer, ffmpeg.stdin)
+        turbopipe.pipe(buffer, fileno)
         progress()
     turbopipe.sync()
 
