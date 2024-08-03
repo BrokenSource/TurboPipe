@@ -17,3 +17,6 @@ requires-python = ">=3.7"
 [build-system]
 requires = ["meson-python", "ninja"]
 build-backend = "mesonpy"
+
+[tool.ruff.format]
+exclude = ["*"]

@@ -5,6 +5,7 @@ from typing import Generator
 
 import moderngl
 import tqdm
+
 import turbopipe
 
 # User constants
@@ -75,6 +76,7 @@ with Progress() as progress, FFmpeg() as ffmpeg:
     for frame in range(TOTAL_FRAMES):
         turbopipe.pipe(buffer, fileno)
         progress()
+
     turbopipe.sync()
 
 turbopipe.close()
