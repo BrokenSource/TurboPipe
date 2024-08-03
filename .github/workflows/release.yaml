@@ -53,7 +53,7 @@ jobs:
         run: python -m cibuildwheel --output-dir package
 
       - name: upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: package
           path: package/*.whl
@@ -68,8 +68,14 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
 
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: package
+          path: package
+
       - name: deps
-        run: python -m pip install -U pip wheel build twine cibuildwheel
+        run: python -m pip install -U twine
 
       - name: publish
         env:
