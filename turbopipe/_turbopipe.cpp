@@ -172,14 +172,19 @@ private:
             stream[file].pop_front();
             lock.unlock();
 
-            // Optimization: Write in chunks of 4096 (RAM page size)
-            size_t tell = 0;
-            while (tell < work.size) {
-                size_t chunk = min(work.size - tell, static_cast<size_t>(4096));
-                ssize_t written = write(work.file, (char*) work.map + tell, chunk);
-                if (written == -1) break;
-                tell += written;
-            }
+            #ifdef _WIN32
+                // Windows doesn't like chunked writes ??
+                write(work.file, (char*) work.map, work.size);
+            #else
+                // Optimization: Write in chunks of 4096 (RAM page size)
+                size_t tell = 0;
+                while (tell < work.size) {
+                    size_t chunk = min(work.size - tell, static_cast<size_t>(4096));
+                    size_t written = write(work.file, (char*) work.map + tell, chunk);
+                    if (written == -1) break;
+                    tell += written;
+                }
+            #endif
 
             // Signal work is done
             lock.lock();

@@ -8,11 +8,13 @@ project('turbopipe', 'cpp',
 
     default_options: [
         'warning_level=3',
-        'cpp_std=c++11',
+        'cpp_std=c++14',
         'buildtype=release',
         'optimization=3'
     ]
 )
+
+message('C++ compiler: ' + meson.get_compiler('cpp').get_id())
 
 # ----------------------------------------------|
 # Platform flags
