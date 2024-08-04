@@ -21,6 +21,7 @@ TOTAL_BYTES = (BYTES_PER_FRAME * TOTAL_FRAMES)
 # Create ModernGL objects
 ctx = moderngl.create_standalone_context()
 buffer = ctx.buffer(reserve=BYTES_PER_FRAME)
+print(f"OpenGL Renderer: {ctx.info['GL_RENDERER']}")
 
 # Let's play fair and avoid any OS/Python/Hardware optimizations
 buffer.write(bytearray(random.getrandbits(8) for _ in range(BYTES_PER_FRAME)))
@@ -61,7 +62,7 @@ def Progress():
 
 # -------------------------------------------------------------------------------------------------|
 
-print("\n:: Traditional method\n")
+print("\n:: Standard method\n")
 
 with Progress() as progress, FFmpeg() as ffmpeg:
     for frame in range(TOTAL_FRAMES):

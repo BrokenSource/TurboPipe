@@ -17,8 +17,10 @@ import tqdm
 import turbopipe
 
 ctx = moderngl.create_standalone_context()
+print(f"OpenGL Renderer: {ctx.info['GL_RENDERER']}")
+
 AVERAGE_N_RUNS = 3
-DATA_SIZE = 3
+DATA_SIZE_GB = 5
 
 # -------------------------------------------------------------------------------------------------|
 
@@ -141,7 +143,7 @@ class Benchmark:
                     nbuffer = (4 if test_case in ["B", "C", "D"] else 1)
                     buffers = [ctx.buffer(data=numpy.random.randint(128, 135, (height, width, 3), dtype=numpy.uint8)) for _ in range(nbuffer)]
                     bytes_per_frame = (width * height * 3)
-                    total_frames = int((DATA_SIZE * 1024**3) / bytes_per_frame)
+                    total_frames = int((DATA_SIZE_GB * 1024**3) / bytes_per_frame)
                     statistics = Statistics(bytes_per_frame)
 
                     for run in range(AVERAGE_N_RUNS):
