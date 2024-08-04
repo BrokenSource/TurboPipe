@@ -76,7 +76,7 @@ ffmpeg.wait()
 > [!NOTE]
 > **The tests conditions are as follows**:
 > - The tests are the average of 3 runs to ensure consistency, with 5 GB of the same data being piped
-> - These aren't tests of render speed; but ratherthe throughput speed of GPU -> CPU -> RAM -> IPC
+> - These aren't tests of render speed; but rather the throughput speed of GPU -> CPU -> RAM -> IPC
 > - All resolutions are wide-screen (16:9) and have 3 components (RGB) with 3 bytes per pixel (SDR)
 > - The data is a random noise per-buffer between 128-135. So, multi-buffers runs are a noise video
 > - Multi-buffer cycles through a list of buffer (eg. 1, 2, 3, 1, 2, 3... for 3-buffers)
@@ -98,7 +98,7 @@ ffmpeg.wait()
     <summary><b>Desktop</b> • (AMD Ryzen 9 5900x) • (NVIDIA RTX 3060 12 GB) • (DDR4 2x32 GB 3200 MT/s) • (Arch Linux)</summary>
     <br>
 
-<b>Note:</b> I have noted inconsistency across tests, specially at lower resolutions. Some 720p runs might peak at 2900 fps and stay there, while others are limited by 1750 fps. I'm not sure if it's the Linux EEVDF scheduler, or Ryzen's CPU Topology (multi-CCD) that causes this. Nevertheless, results are stable on Windows 11 on the same machine.
+<b>Note:</b> I have noted inconsistency across tests, specially at lower resolutions. Some 720p runs might peak at 2900 fps and stay there, while others are limited by 1750 fps. I'm not sure if it's the Linux EEVDF scheduler, or CPU Topology that causes this. Nevertheless, results are stable on Windows 11 on the same machine.
 
 | 720p | x264      |   Buffers | Framerate | Bandwidth   | Gain     |
 |:----:|:----------|:---------:|----------:|------------:|---------:|
