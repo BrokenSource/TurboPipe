@@ -12,7 +12,6 @@
 #include <thread>
 #include <mutex>
 #include <condition_variable>
-#include <unistd.h>
 #include <iostream>
 #include <unordered_map>
 #include <deque>
