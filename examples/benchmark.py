@@ -120,7 +120,7 @@ class Benchmark:
             process = subprocess.Popen(command, stdin=subprocess.PIPE)
             yield process
         finally:
-            turbopipe.sync()
+            turbopipe.close()
             process.stdin.close()
             process.wait()
 
@@ -153,8 +153,7 @@ class Benchmark:
 
                             for frame in tqdm.tqdm(
                                 desc=f"Processing (Run #{run}) ({method.value} {width}x{height})",
-                                iterable=range(total_frames),
-                                smoothing=0, unit=" Frame"
+                                iterable=range(total_frames), smoothing=0, unit=" Frame", mininterval=1/30,
                             ):
                                 buffer = buffers[frame % nbuffer]
 

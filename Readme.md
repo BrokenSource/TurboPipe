@@ -42,7 +42,7 @@ rye add turbopipe
 
 # 🚀 Usage
 
-See also the [**Examples**](examples) folder for more controlled usage, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
+See also the [**Examples**](https://github.com/BrokenSource/TurboPipe/tree/main/examples) folder for more controlled usage, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
 
 ```python
 import subprocess
@@ -87,7 +87,7 @@ ffmpeg.wait()
 >     - 🚀: Threaded `ffmpeg.stdin.write(buffer.read())` with a queue (similar to turbopipe)
 >     - 🌀: The magic of `turbopipe.pipe(buffer, ffmpeg.stdin.fileno())`
 >
-> Also see [`benchmark.py`](examples/benchmark.py) for the implementation
+> Also see [`benchmark.py`](https://github.com/BrokenSource/TurboPipe/blob/main/examples/benchmark.py) for the implementation
 
 ✅ Check out benchmarks in a couple of systems below:
 

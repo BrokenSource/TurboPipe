@@ -9,16 +9,22 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 
+// Standard library
+#include <functional>
+#include <iostream>
+#include <chrono>
+
+// Threading
+#include <condition_variable>
 #include <thread>
 #include <mutex>
-#include <condition_variable>
-#include <iostream>
+
+// Data structure
+#include <unordered_set>
 #include <unordered_map>
 #include <deque>
-#include <chrono>
-#include <functional>
-#include <set>
 
+// Third party
 #include "gl_methods.hpp"
 
 #define dict std::unordered_map
@@ -121,8 +127,8 @@ public:
 
 private:
     dict<int, dict<int, condition_variable>> pending;
+    dict<int, unordered_set<int>> queue;
     dict<int, deque<Work>> stream;
-    dict<int, set<int>> queue;
     dict<int, thread> threads;
     dict<int, mutex> mutexes;
     condition_variable signal;
@@ -139,12 +145,12 @@ private:
             pending[file][hash].wait(lock, [this, file, hash] {
                 return queue[file].find(hash) == queue[file].end();
             });
-            pending[file].erase(hash);
-            queue[file].insert(hash);
         }
 
         // Add another job to the queue
         stream[file].push_back(work);
+        queue[file].insert(hash);
+        this->running = true;
         lock.unlock();
 
         // Each file descriptor has its own thread

@@ -52,8 +52,8 @@ def FFmpeg() -> Generator[subprocess.Popen, None, None]:
 
 @contextlib.contextmanager
 def Progress():
-    with tqdm.tqdm(total=TOTAL_FRAMES, unit="Frame", smoothing=0) as frame_bar, \
-         tqdm.tqdm(total=TOTAL_BYTES,  unit="B", smoothing=0, unit_scale=True) as byte_bar:
+    with tqdm.tqdm(total=TOTAL_FRAMES, unit="Frame", smoothing=0, mininterval=1/30) as frame_bar, \
+         tqdm.tqdm(total=TOTAL_BYTES,  unit="B", smoothing=0, mininterval=1/30, unit_scale=True) as byte_bar:
         def next():
             byte_bar.update(BYTES_PER_FRAME)
             frame_bar.update(1)
@@ -80,3 +80,4 @@ with Progress() as progress, FFmpeg() as ffmpeg:
     turbopipe.sync()
 
 turbopipe.close()
+
