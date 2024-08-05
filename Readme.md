@@ -53,6 +53,7 @@ See also the [**Examples**](https://github.com/BrokenSource/TurboPipe/tree/main/
 
 ```python
 import subprocess
+
 import moderngl
 import turbopipe
 
@@ -62,16 +63,16 @@ buffer = ctx.buffer(reserve=1920*1080*3)
 
 # Make sure resolution, pixel format matches!
 ffmpeg = subprocess.Popen(
-    'ffmpeg -f rawvideo -pix_fmt rgb24 -s 1920x1080 -i - -f null -'.split(),
+    'ffmpeg -f rawvideo -pix_fmt rgb24 -r 60 -s 1920x1080 -i - -f null -'.split(),
     stdin=subprocess.PIPE
 )
 
-# Rendering loop of yours
-for _ in range(100):
+# Rendering loop of yours (eg. 1m footage)
+for _ in range(60 * 60):
     turbopipe.pipe(buffer, ffmpeg.stdin.fileno())
 
 # Finalize writing
-turbo.sync()
+turbopipe.sync()
 ffmpeg.stdin.close()
 ffmpeg.wait()
 ```
