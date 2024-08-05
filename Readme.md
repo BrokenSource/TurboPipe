@@ -29,12 +29,19 @@ The **optimizations** involved are:
 
 # 📦 Installation
 
-It couldn't be easier! Just install in your package manager:
+It couldn't be easier! Just install the [**`turbopipe`**](https://pypi.org/project/turbopipe/) package from PyPI:
 
 ```bash
-pip install turbopipe
+# With pip (https://pip.pypa.io/)
+python -m pip install turbopipe
+
+# With Poetry (https://python-poetry.org/)
 poetry add turbopipe
+
+# With PDM (https://pdm-project.org/en/latest/)
 pdm add turbopipe
+
+# With Rye (https://rye.astral.sh/)
 rye add turbopipe
 ```
 
