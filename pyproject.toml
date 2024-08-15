@@ -7,7 +7,7 @@ homepage      = "https://brokensrc.dev"
 [project]
 name        = "turbopipe"
 dynamic     = ["version"]
-description = "🌀 Faster ModernGL Buffer inter process data transfers"
+description = "🌀 Faster MemoryView inter-process data transfers for subprocesses"
 authors     = [{name="Tremeschin", email="29046864+Tremeschin@users.noreply.github.com"}]
 readme      = "Readme.md"
 license     = {file="License.md"}

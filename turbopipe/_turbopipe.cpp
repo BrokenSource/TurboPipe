@@ -1,6 +1,6 @@
 // ------------------------------------------------------------------------------------------------|
 //
-// TurboPipe - Faster ModernGL Buffer inter process data transfers
+// TurboPipe - Faster MemoryView inter-process data transfers for subprocesses
 //
 // (c) 2024, Tremeschin, MIT License
 //
@@ -24,59 +24,8 @@
 #include <unordered_map>
 #include <deque>
 
-// Third party
-#include "gl_methods.hpp"
-
 #define dict std::unordered_map
 using namespace std;
-
-// ------------------------------------------------------------------------------------------------|
-// ModernGL Types - Courtesy of the moderngl package developers (MIT)
-
-static PyTypeObject* MGLBuffer_type = nullptr;
-
-struct MGLContext;
-struct MGLFramebuffer;
-
-struct MGLBuffer {
-    PyObject_HEAD
-    MGLContext* context;
-    int buffer;
-    Py_ssize_t size;
-    bool dynamic;
-    bool released;
-};
-
-struct MGLContext {
-    PyObject_HEAD
-    PyObject * ctx;
-    PyObject * extensions;
-    MGLFramebuffer * default_framebuffer;
-    MGLFramebuffer * bound_framebuffer;
-    PyObject * includes;
-    int version_code;
-    int max_samples;
-    int max_integer_samples;
-    int max_color_attachments;
-    int max_texture_units;
-    int default_texture_unit;
-    float max_anisotropy;
-    int enable_flags;
-    int front_face;
-    int cull_face;
-    int depth_func;
-    bool depth_clamp;
-    double depth_range[2];
-    int blend_func_src;
-    int blend_func_dst;
-    bool wireframe;
-    bool multisample;
-    int provoking_vertex;
-    float polygon_offset_factor;
-    float polygon_offset_units;
-    GLMethods gl;
-    bool released;
-};
 
 // ------------------------------------------------------------------------------------------------|
 // TurboPipe internals
@@ -96,14 +45,9 @@ public:
     TurboPipe(): running(true) {}
     ~TurboPipe() {close();}
 
-    void pipe(MGLBuffer* buffer, int file) {
-        const GLMethods& gl = buffer->context->gl;
-
-        gl.BindBuffer(GL_ARRAY_BUFFER, buffer->buffer);
-        void* data = gl.MapBufferRange(GL_ARRAY_BUFFER, 0, buffer->size, GL_MAP_READ_BIT);
-        gl.UnmapBuffer(GL_ARRAY_BUFFER);
-
-        this->_pipe(data, buffer->size, file);
+    void pipe(PyObject* memoryview, int file) {
+        Py_buffer view = *PyMemoryView_GET_BUFFER(memoryview);
+        this->_pipe(view.buf, view.len, file);
     }
 
     void sync() {
@@ -211,11 +155,15 @@ static PyObject* turbopipe_pipe(
     PyObject* Py_UNUSED(self),
     PyObject* args
 ) {
-    PyObject* buffer;
+    PyObject* memoryview;
     PyObject* file;
-    if (!PyArg_ParseTuple(args, "OO", &buffer, &file))
+    if (!PyArg_ParseTuple(args, "OO", &memoryview, &file))
         return NULL;
-    turbopipe->pipe((MGLBuffer*) buffer, PyLong_AsLong(file));
+    if (!PyMemoryView_Check(memoryview)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a memoryview object");
+        return NULL;
+    }
+    turbopipe->pipe(memoryview, PyLong_AsLong(file));
     Py_RETURN_NONE;
 }
 
@@ -259,9 +207,8 @@ static struct PyModuleDef turbopipe_module = {
 
 PyMODINIT_FUNC PyInit__turbopipe(void) {
     PyObject* module = PyModule_Create(&turbopipe_module);
-    PyObject* moderngl = PyImport_ImportModule("moderngl");
-    PyObject* buffer = PyObject_GetAttrString(moderngl, "Buffer");
-    MGLBuffer_type = (PyTypeObject*) buffer;
+    if (module == NULL)
+        return NULL;
     turbopipe = new TurboPipe();
     Py_AtExit(turbopipe_exit);
     return module;

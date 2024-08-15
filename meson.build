@@ -28,7 +28,6 @@ endif
 # ----------------------------------------------|
 # Source files
 
-incdir = include_directories('turbopipe/include')
 source = files('turbopipe/_turbopipe.cpp')
 
 # ----------------------------------------------|
@@ -37,7 +36,6 @@ python = import('python').find_installation()
 
 python.extension_module(
     '_turbopipe', source,
-    include_directories: incdir,
     cpp_args: cpp_args,
     install: true,
     subdir: 'turbopipe'

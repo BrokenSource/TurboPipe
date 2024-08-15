@@ -5,14 +5,21 @@
   <a href="https://brokensrc.dev/"><img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/turbopipe/resources/images/turbopipe.png" width="200"></a>
   <h1>TurboPipe</h1>
   <br>
-  Faster <a href="https://github.com/moderngl/moderngl"><b>ModernGL</b></a> inter-process data transfers
+  Faster <a href="https://docs.python.org/3/c-api/memoryview.html"><b>MemoryView</b></a> and <a href="https://github.com/moderngl/moderngl"><b>ModernGL Buffers</b></a> inter-process data transfers for subprocesses
+  <br>
+  <br>
+  <a href="https://pypi.org/project/turbopipe/"><img src="https://img.shields.io/pypi/v/turbopipe?label=PyPI&color=blue"></a>
+  <a href="https://pypi.org/project/turbopipe/"><img src="https://img.shields.io/pypi/dw/turbopipe?label=Installs&color=blue"></a>
+  <a href="https://github.com/BrokenSource/TurboPipe"><img src="https://img.shields.io/github/v/tag/BrokenSource/TurboPipe?label=GitHub&color=orange"></a>
+  <a href="https://github.com/BrokenSource/TurboPipe/stargazers"><img src="https://img.shields.io/github/stars/BrokenSource/TurboPipe?label=Stars&style=flat&color=orange"></a>
+  <a href="https://discord.gg/KjqvcYwRHm"><img src="https://img.shields.io/discord/1184696441298485370?label=Discord&style=flat&color=purple"></a>
 </div>
 
 <br>
 
 # 🔥 Description
 
-> TurboPipe speeds up sending raw bytes from `moderngl.Buffer` objects primarily to `FFmpeg` subprocess
+> TurboPipe speeds up sending raw bytes from `MemoryView` objects primarily to `FFmpeg` subprocess
 
 The **optimizations** involved are:
 
@@ -52,6 +59,7 @@ rye add turbopipe
 See also the [**Examples**](https://github.com/BrokenSource/TurboPipe/tree/main/examples) folder for more controlled usage, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
 
 ```python
+# Example with ModernGL Buffers
 import subprocess
 
 import moderngl

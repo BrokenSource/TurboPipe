@@ -1,13 +1,14 @@
 from io import IOBase
+from typing import Union
 
 from moderngl import Buffer
 
 from turbopipe import _turbopipe
 
 
-def pipe(buffer: Buffer, file: IOBase) -> None:
+def pipe(buffer: Union[Buffer, memoryview], file: IOBase) -> None:
     """
-    Pipe the content of a moderngl.Buffer to a file descriptor,
+    Pipe the content of a moderngl.Buffer or memoryview to a file descriptor,
     Fast, threaded and non-blocking. Call `sync()` when done!
 
     Usage:
@@ -24,7 +25,10 @@ def pipe(buffer: Buffer, file: IOBase) -> None:
         turbopipe.pipe(buffer, child.stdin.fileno())
         ```
     """
-    _turbopipe.pipe(buffer.mglo, file)
+    if isinstance(buffer, Buffer):
+        buffer = memoryview(buffer.mglo)
+    _turbopipe.pipe(buffer, file)
+    del buffer
 
 def sync() -> None:
     """Waits for all jobs to finish"""
