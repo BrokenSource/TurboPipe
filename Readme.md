@@ -1,6 +1,6 @@
 > [!IMPORTANT]
 > <sub>Also check out [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow), where **TurboPipe** shines! 😉</sub>
-
+<!-- PyPI -->
 <div align="center">
   <a href="https://brokensrc.dev/"><img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/turbopipe/resources/images/turbopipe.png" width="200"></a>
   <h1>TurboPipe</h1>

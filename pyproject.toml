@@ -15,8 +15,15 @@ dependencies = ["moderngl"]
 requires-python = ">=3.7"
 
 [build-system]
-requires = ["meson-python", "ninja"]
+requires = ["meson-python", "ninja", "hatch-fancy-pypi-readme"]
 build-backend = "mesonpy"
+
+[tool.hatch.metadata.hooks.fancy-pypi-readme]
+content-type = "text/markdown"
+
+[[tool.hatch.metadata.hooks.fancy-pypi-readme.fragments]]
+start-after = "<!-- PyPI -->"
+path = "Readme.md"
 
 [tool.ruff.format]
 exclude = ["*"]
