@@ -4,8 +4,7 @@
 <div align="center">
   <a href="https://brokensrc.dev/"><img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/turbopipe/resources/images/turbopipe.png" width="200"></a>
   <h1>TurboPipe</h1>
-  <br>
-  Faster <a href="https://docs.python.org/3/c-api/memoryview.html"><b>MemoryView</b></a> and <a href="https://github.com/moderngl/moderngl"><b>ModernGL Buffers</b></a> inter-process data transfers for subprocesses
+  Faster <a href="https://github.com/moderngl/moderngl"><b>ModernGL Buffers</b></a> inter-process data transfers for subprocesses
   <br>
   <br>
   <a href="https://pypi.org/project/turbopipe/"><img src="https://img.shields.io/pypi/v/turbopipe?label=PyPI&color=blue"></a>
@@ -19,13 +18,13 @@
 
 # 🔥 Description
 
-> TurboPipe speeds up sending raw bytes from `MemoryView` objects primarily to `FFmpeg` subprocess
+> TurboPipe speeds up sending raw bytes from `moderngl.Buffer` objects primarily to `FFmpeg` subprocess
 
 The **optimizations** involved are:
 
 - **Zero-copy**: Avoid unnecessary memory copies or allocation (intermediate `buffer.read()`)
 - **C++**: The core of TurboPipe is written in C++ for speed, efficiency and low-level control
-- **Chunks**: Write in chunks of 4096 bytes (RAM page size), so the hardware is happy
+- **Chunks**: Write in chunks of 4096 bytes (RAM page size), so the hardware is happy (Unix)
 - **Threaded**:
     - Doesn't block Python code execution, allows to render next frame
     - Decouples the main thread from the I/O thread for performance
@@ -40,7 +39,7 @@ It couldn't be easier! Just install the [**`turbopipe`**](https://pypi.org/proje
 
 ```bash
 # With pip (https://pip.pypa.io/)
-python -m pip install turbopipe
+pip install turbopipe
 
 # With Poetry (https://python-poetry.org/)
 poetry add turbopipe
@@ -56,10 +55,9 @@ rye add turbopipe
 
 # 🚀 Usage
 
-See also the [**Examples**](https://github.com/BrokenSource/TurboPipe/tree/main/examples) folder for more controlled usage, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
+See also the [**Examples**](https://github.com/BrokenSource/TurboPipe/tree/main/examples) folder for comparisons, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
 
 ```python
-# Example with ModernGL Buffers
 import subprocess
 
 import moderngl
@@ -79,7 +77,7 @@ ffmpeg = subprocess.Popen(
 for _ in range(60 * 60):
     turbopipe.pipe(buffer, ffmpeg.stdin.fileno())
 
-# Finalize writing
+# Finalize writing, encoding
 turbopipe.sync()
 ffmpeg.stdin.close()
 ffmpeg.wait()
@@ -121,9 +119,9 @@ ffmpeg.wait()
 | 🐢   | Null      |         1 |   882 fps | 2.44 GB/s   |          |
 | 🚀   | Null      |         1 |   793 fps | 2.19 GB/s   | -10.04%  |
 | 🌀   | Null      |         1 |  1911 fps | 5.28 GB/s   | 116.70%  |
-| 🐢   | Null      |         4 |   880 fps | 2.43 GB/s   |          |
-| 🚀   | Null      |         4 |   924 fps | 2.56 GB/s   | 5.05%    |
-| 🌀   | Null      |         4 |  2037 fps | 5.63 GB/s   | 131.59%  |
+| 🐢   | Null      |         4 |   857 fps | 2.37 GB/s   |          |
+| 🚀   | Null      |         4 |   891 fps | 2.47 GB/s   | 4.05%    |
+| 🌀   | Null      |         4 |  2309 fps | 6.38 GB/s   | 169.45%  |
 | 🐢   | ultrafast |         4 |   714 fps | 1.98 GB/s   |          |
 | 🚀   | ultrafast |         4 |   670 fps | 1.85 GB/s   | -6.10%   |
 | 🌀   | ultrafast |         4 |  1093 fps | 3.02 GB/s   | 53.13%   |
@@ -139,9 +137,9 @@ ffmpeg.wait()
 | 🐢    | Null      |         4 |   390 fps | 2.43 GB/s   |         |
 | 🚀    | Null      |         4 |   391 fps | 2.43 GB/s   | 0.26%   |
 | 🌀    | Null      |         4 |   756 fps | 4.71 GB/s   | 94.01%  |
-| 🐢    | ultrafast |         4 |   277 fps | 1.73 GB/s   |         |
-| 🚀    | ultrafast |         4 |   270 fps | 1.68 GB/s   | -2.40%  |
-| 🌀    | ultrafast |         4 |   402 fps | 2.50 GB/s   | 45.32%  |
+| 🐢    | ultrafast |         4 |   269 fps | 1.68 GB/s   |         |
+| 🚀    | ultrafast |         4 |   272 fps | 1.70 GB/s   | 1.48%   |
+| 🌀    | ultrafast |         4 |   409 fps | 2.55 GB/s   | 52.29%  |
 | 🐢    | slow      |         4 |   115 fps | 0.72 GB/s   |         |
 | 🚀    | slow      |         4 |   118 fps | 0.74 GB/s   | 3.40%   |
 | 🌀    | slow      |         4 |   119 fps | 0.75 GB/s   | 4.34%   |
@@ -151,9 +149,9 @@ ffmpeg.wait()
 | 🐢    | Null      |         1 |   210 fps | 2.33 GB/s   |          |
 | 🚀    | Null      |         1 |   239 fps | 2.64 GB/s   | 13.84%   |
 | 🌀    | Null      |         1 |   534 fps | 5.91 GB/s   | 154.32%  |
-| 🐢    | Null      |         4 |   233 fps | 2.58 GB/s   |          |
-| 🚀    | Null      |         4 |   232 fps | 2.57 GB/s   | -0.08%   |
-| 🌀    | Null      |         4 |   495 fps | 5.48 GB/s   | 112.64%  |
+| 🐢    | Null      |         4 |   219 fps | 2.43 GB/s   |          |
+| 🚀    | Null      |         4 |   231 fps | 2.56 GB/s   | 5.64%    |
+| 🌀    | Null      |         4 |   503 fps | 5.56 GB/s   | 129.75%  |
 | 🐢    | ultrafast |         4 |   141 fps | 1.56 GB/s   |          |
 | 🚀    | ultrafast |         4 |   150 fps | 1.67 GB/s   | 6.92%    |
 | 🌀    | ultrafast |         4 |   226 fps | 2.50 GB/s   | 60.37%   |
@@ -333,9 +331,7 @@ On realistically loads, like [**ShaderFlow**](https://github.com/BrokenSource/Sh
 
 # 📚 Future work
 
-- Add support for NumPy arrays, memoryviews, and byte-like objects
 - Disable/investigate performance degradation on Windows iGPUs
 - Improve the thread synchronization and/or use a ThreadPool
-- Stabler way for finding mglo struct offsets (moderngl.h?)
 - Maybe use `mmap` instead of chunks writing on Linux
-- Test on MacOS 🙈
+- Test on macOS 🙈

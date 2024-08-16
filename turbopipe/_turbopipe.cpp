@@ -1,6 +1,6 @@
 // ------------------------------------------------------------------------------------------------|
 //
-// TurboPipe - Faster MemoryView inter-process data transfers for subprocesses
+// TurboPipe - Faster ModernGL Buffers inter-process data transfers for subprocesses
 //
 // (c) 2024, Tremeschin, MIT License
 //
@@ -11,7 +11,6 @@
 
 // Standard library
 #include <functional>
-#include <iostream>
 #include <chrono>
 
 // Threading

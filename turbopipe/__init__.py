@@ -1,4 +1,3 @@
-from io import IOBase
 from typing import Union
 
 from moderngl import Buffer
@@ -6,7 +5,7 @@ from moderngl import Buffer
 from turbopipe import _turbopipe
 
 
-def pipe(buffer: Union[Buffer, memoryview], file: IOBase) -> None:
+def pipe(buffer: Union[Buffer, memoryview], fileno: int) -> None:
     """
     Pipe the content of a moderngl.Buffer or memoryview to a file descriptor,
     Fast, threaded and non-blocking. Call `sync()` when done!
@@ -27,7 +26,7 @@ def pipe(buffer: Union[Buffer, memoryview], file: IOBase) -> None:
     """
     if isinstance(buffer, Buffer):
         buffer = memoryview(buffer.mglo)
-    _turbopipe.pipe(buffer, file)
+    _turbopipe.pipe(buffer, fileno)
     del buffer
 
 def sync() -> None:
