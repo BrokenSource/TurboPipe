@@ -127,7 +127,7 @@ private:
 
             #ifdef _WIN32
                 // Windows doesn't like chunked writes ??
-                write(work.file, (char*) work.map, work.size);
+                write(work.file, (char*) work.data, work.size);
             #else
                 // Optimization: Write in chunks of 4096 (RAM page size)
                 size_t tell = 0;
