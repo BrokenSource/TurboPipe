@@ -30,13 +30,9 @@ using namespace std;
 // TurboPipe internals
 
 struct Work {
-    void* map;
+    void* data;
     int file;
     size_t size;
-
-    int hash() {
-        return std::hash<int>()(file) ^ std::hash<void*>()(map);
-    }
 };
 
 class TurboPipe {
@@ -49,12 +45,23 @@ public:
         this->_pipe(view.buf, view.len, file);
     }
 
-    void sync() {
-        // Wait for all queues to be empty, as they are erased when
+    void sync(PyObject* memoryview=nullptr) {
+        void* data = nullptr;
+
+        if (memoryview != nullptr) {
+            Py_buffer view = *PyMemoryView_GET_BUFFER(memoryview);
+            data = view.buf;
+        }
+
+        // Wait for some or all queues to be empty, as they are erased when
         // each thread's writing loop is done, guaranteeing finish
         for (auto& values: queue) {
-            while (!values.second.empty()) {
-                this_thread::sleep_for(chrono::milliseconds(1));
+            while (true) {
+                if (data != nullptr && values.second.find(data) == values.second.end())
+                    break;
+                if (data == nullptr && values.second.empty())
+                    break;
+                this_thread::sleep_for(chrono::microseconds(200));
             }
         }
     }
@@ -69,8 +76,8 @@ public:
     }
 
 private:
-    dict<int, dict<int, condition_variable>> pending;
-    dict<int, unordered_set<int>> queue;
+    dict<int, dict<void*, condition_variable>> pending;
+    dict<int, unordered_set<void*>> queue;
     dict<int, deque<Work>> stream;
     dict<int, thread> threads;
     dict<int, mutex> mutexes;
@@ -79,20 +86,18 @@ private:
 
     void _pipe(void* data, size_t size, int file) {
         Work work = {data, file, size};
-        int hash = work.hash();
-
         unique_lock<mutex> lock(mutexes[file]);
 
-        // Notify this hash is queued, wait if pending
-        if (!queue[file].insert(hash).second) {
-            pending[file][hash].wait(lock, [this, file, hash] {
-                return queue[file].find(hash) == queue[file].end();
+        // Notify this memory is queued, wait if pending
+        if (!queue[file].insert(data).second) {
+            pending[file][data].wait(lock, [this, file, data] {
+                return queue[file].find(data) == queue[file].end();
             });
         }
 
         // Add another job to the queue
         stream[file].push_back(work);
-        queue[file].insert(hash);
+        queue[file].insert(data);
         this->running = true;
         lock.unlock();
 
@@ -128,7 +133,7 @@ private:
                 size_t tell = 0;
                 while (tell < work.size) {
                     size_t chunk = min(work.size - tell, static_cast<size_t>(4096));
-                    size_t written = write(work.file, (char*) work.map + tell, chunk);
+                    size_t written = write(work.file, (char*) work.data + tell, chunk);
                     if (written == -1) break;
                     tell += written;
                 }
@@ -136,9 +141,8 @@ private:
 
             // Signal work is done
             lock.lock();
-            int hash = work.hash();
-            pending[file][hash].notify_all();
-            queue[file].erase(hash);
+            pending[file][work.data].notify_all();
+            queue[file].erase(work.data);
             signal.notify_all();
         }
     }
@@ -168,9 +172,16 @@ static PyObject* turbopipe_pipe(
 
 static PyObject* turbopipe_sync(
     PyObject* Py_UNUSED(self),
-    PyObject* Py_UNUSED(args)
+    PyObject* args
 ) {
-    turbopipe->sync();
+    PyObject* memoryview;
+    if (!PyArg_ParseTuple(args, "|O", &memoryview))
+        return NULL;
+    if (memoryview != nullptr && !PyMemoryView_Check(memoryview)) {
+        PyErr_SetString(PyExc_TypeError, "Expected a memoryview object or None");
+        return NULL;
+    }
+    turbopipe->sync(memoryview);
     Py_RETURN_NONE;
 }
 
@@ -191,7 +202,7 @@ static void turbopipe_exit() {
 
 static PyMethodDef TurboPipeMethods[] = {
     {"pipe",  (PyCFunction) turbopipe_pipe,  METH_VARARGS, ""},
-    {"sync",  (PyCFunction) turbopipe_sync,  METH_NOARGS,  ""},
+    {"sync",  (PyCFunction) turbopipe_sync,  METH_VARARGS, ""},
     {"close", (PyCFunction) turbopipe_close, METH_NOARGS,  ""},
     {NULL, NULL, 0, NULL}
 };

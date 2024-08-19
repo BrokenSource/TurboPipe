@@ -1,4 +1,4 @@
-from typing import Union
+from typing import Optional, Union
 
 from moderngl import Buffer
 
@@ -7,8 +7,8 @@ from turbopipe import _turbopipe
 
 def pipe(buffer: Union[Buffer, memoryview], fileno: int) -> None:
     """
-    Pipe the content of a moderngl.Buffer or memoryview to a file descriptor,
-    Fast, threaded and non-blocking. Call `sync()` when done!
+    Pipe the content of a moderngl.Buffer or memoryview to a file descriptor, fast, threaded and
+    blocking when needed. Call `sync(buffer)` before this, and `sync()` when done for
 
     Usage:
         ```python
@@ -29,9 +29,12 @@ def pipe(buffer: Union[Buffer, memoryview], fileno: int) -> None:
     _turbopipe.pipe(buffer, fileno)
     del buffer
 
-def sync() -> None:
-    """Waits for all jobs to finish"""
-    _turbopipe.sync()
+def sync(buffer: Optional[Union[Buffer, memoryview]]=None) -> None:
+    """Waits for any pending write operation on a buffer, or 'all buffers' if None, to finish"""
+    if isinstance(buffer, Buffer):
+        buffer = memoryview(buffer.mglo)
+    _turbopipe.sync(buffer)
+    del buffer
 
 def close() -> None:
     """Syncs and deletes objects"""
