@@ -57,10 +57,16 @@ public:
         // each thread's writing loop is done, guaranteeing finish
         for (auto& values: queue) {
             while (true) {
-                if (data != nullptr && values.second.find(data) == values.second.end())
-                    break;
-                if (data == nullptr && values.second.empty())
-                    break;
+                {
+                    // Prevent segfault on iteration on changing data
+                    lock_guard<mutex> lock(mutexes[values.first]);
+
+                    // Either all empty or some memory not queued (None or specific)
+                    if (data != nullptr && values.second.find(data) == values.second.end())
+                        break;
+                    if (data == nullptr && values.second.empty())
+                        break;
+                }
                 this_thread::sleep_for(chrono::microseconds(200));
             }
         }
