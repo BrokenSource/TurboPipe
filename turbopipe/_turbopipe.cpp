@@ -23,7 +23,6 @@
 #include <unordered_map>
 #include <deque>
 
-#define dict std::unordered_map
 using namespace std;
 
 // ------------------------------------------------------------------------------------------------|
@@ -82,11 +81,11 @@ public:
     }
 
 private:
-    dict<int, dict<void*, condition_variable>> pending;
-    dict<int, unordered_set<void*>> queue;
-    dict<int, deque<Work>> stream;
-    dict<int, thread> threads;
-    dict<int, mutex> mutexes;
+    unordered_map<int, unordered_map<void*, condition_variable>> pending;
+    unordered_map<int, unordered_set<void*>> queue;
+    unordered_map<int, deque<Work>> stream;
+    unordered_map<int, thread> threads;
+    unordered_map<int, mutex> mutexes;
     condition_variable signal;
     bool running;
 
@@ -94,18 +93,20 @@ private:
         Work work = {data, file, size};
         unique_lock<mutex> lock(mutexes[file]);
 
-        // Notify this memory is queued, wait if pending
-        if (!queue[file].insert(data).second) {
-            pending[file][data].wait(lock, [this, file, data] {
-                return queue[file].find(data) == queue[file].end();
-            });
+        /* Notify this memory is queued, wait if pending */ {
+            if (!queue[file].insert(data).second) {
+                pending[file][data].wait(lock, [this, file, data] {
+                    return queue[file].find(data) == queue[file].end();
+                });
+            }
         }
 
-        // Add another job to the queue
-        stream[file].push_back(work);
-        queue[file].insert(data);
-        this->running = true;
-        lock.unlock();
+        /* Add another job to the queue */ {
+            stream[file].push_back(work);
+            queue[file].insert(data);
+            this->running = true;
+            lock.unlock();
+        }
 
         // Each file descriptor has its own thread
         if (threads.find(file) == threads.end())
@@ -145,11 +146,13 @@ private:
                 }
             #endif
 
-            // Signal work is done
             lock.lock();
-            pending[file][work.data].notify_all();
-            queue[file].erase(work.data);
-            signal.notify_all();
+
+            /* Signal work is done */ {
+                pending[file][work.data].notify_all();
+                queue[file].erase(work.data);
+                signal.notify_all();
+            }
         }
     }
 };
