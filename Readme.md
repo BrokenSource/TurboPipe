@@ -65,7 +65,7 @@ import turbopipe
 
 # Create ModernGL objects
 ctx = moderngl.create_standalone_context()
-buffer = ctx.buffer(reserve=1920*1080*3)
+buffers = [ctx.buffer(reserve=1920*1080*3) for _ in range(2)]
 
 # Make sure resolution, pixel format matches!
 ffmpeg = subprocess.Popen(
@@ -74,7 +74,10 @@ ffmpeg = subprocess.Popen(
 )
 
 # Rendering loop of yours (eg. 1m footage)
-for _ in range(60 * 60):
+for frame in range(60 * 60):
+    buffer = buffers[frame % len(buffer)]
+    turbopipe.sync(buffer)
+    fbo.read_into(buffer)
     turbopipe.pipe(buffer, ffmpeg.stdin.fileno())
 
 # Finalize writing, encoding
