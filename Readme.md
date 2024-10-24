@@ -81,8 +81,8 @@ for frame in range(60 * 60):
     turbopipe.pipe(buffer, ffmpeg.stdin.fileno())
 
 # Finalize writing, encoding
-turbopipe.sync()
 ffmpeg.stdin.close()
+turbopipe.close()
 ffmpeg.wait()
 ```
 
@@ -337,4 +337,3 @@ On realistically loads, like [**ShaderFlow**](https://github.com/BrokenSource/Sh
 - Disable/investigate performance degradation on Windows iGPUs
 - Improve the thread synchronization and/or use a ThreadPool
 - Maybe use `mmap` instead of chunks writing on Linux
-- Test on macOS 🙈
