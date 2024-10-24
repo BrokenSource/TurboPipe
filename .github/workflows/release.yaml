@@ -22,9 +22,9 @@ jobs:
         run: python -m build --sdist -o package
 
       - name: upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: package
+          name: package-sdist
           path: package/*.tar.gz
 
   wheels:
@@ -56,9 +56,9 @@ jobs:
         run: python -m cibuildwheel --output-dir package
 
       - name: upload
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: package
+          name: package-wheels-${{ matrix.os }}
           path: package/*.whl
 
   publish:
@@ -71,9 +71,10 @@ jobs:
       - uses: actions/setup-python@v5
 
       - name: Download artifacts
-        uses: actions/download-artifact@v4.1.7
+        uses: actions/download-artifact@v4
         with:
-          name: package
+          pattern: 'package-*'
+          merge-multiple: true
           path: package
 
       - name: deps
