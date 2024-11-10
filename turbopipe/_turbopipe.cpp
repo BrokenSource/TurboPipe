@@ -29,9 +29,9 @@ using namespace std;
 // TurboPipe internals
 
 struct Work {
-    void* data;
-    int file;
-    size_t size;
+    void*   data;
+    ssize_t size;
+    int     file;
 };
 
 class TurboPipe {
@@ -39,36 +39,20 @@ public:
     TurboPipe(): running(true) {}
     ~TurboPipe() {close();}
 
-    void pipe(PyObject* memoryview, int file) {
-        Py_buffer view = *PyMemoryView_GET_BUFFER(memoryview);
-        this->_pipe(view.buf, view.len, file);
+    void pipe(PyObject* view, int file) {
+        Py_buffer data = *PyMemoryView_GET_BUFFER(view);
+        this->_pipe({data.buf, data.len, file});
     }
 
-    void sync(PyObject* memoryview=nullptr) {
+    void sync(PyObject* view=nullptr) {
         void* data = nullptr;
 
-        if (memoryview != nullptr) {
-            Py_buffer view = *PyMemoryView_GET_BUFFER(memoryview);
-            data = view.buf;
+        if (view != nullptr) {
+            Py_buffer temp = *PyMemoryView_GET_BUFFER(view);
+            data = temp.buf;
         }
 
-        // Wait for some or all queues to be empty, as they are erased when
-        // each thread's writing loop is done, guaranteeing finish
-        for (auto& values: queue) {
-            while (true) {
-                {
-                    // Prevent segfault on iteration on changing data
-                    lock_guard<mutex> lock(mutexes[values.first]);
-
-                    // Either all empty or some memory not queued (None or specific)
-                    if (data != nullptr && values.second.find(data) == values.second.end())
-                        break;
-                    if (data == nullptr && values.second.empty())
-                        break;
-                }
-                this_thread::sleep_for(chrono::microseconds(200));
-            }
-        }
+        this->_sync(data);
     }
 
     void close() {
@@ -89,30 +73,49 @@ private:
     condition_variable signal;
     bool running;
 
-    void _pipe(void* data, size_t size, int file) {
-        Work work = {data, file, size};
-        unique_lock<mutex> lock(mutexes[file]);
+    void _pipe(Work work) {
+        unique_lock<mutex> lock(mutexes[work.file]);
 
         /* Notify this memory is queued, wait if pending */ {
-            if (!queue[file].insert(data).second) {
-                pending[file][data].wait(lock, [this, file, data] {
-                    return queue[file].find(data) == queue[file].end();
+            if (!queue[work.file].insert(work.data).second) {
+                pending[work.file][work.data].wait(lock, [this, work] {
+                    return queue[work.file].find(work.data) == queue[work.file].end();
                 });
             }
         }
 
         /* Add another job to the queue */ {
-            stream[file].push_back(work);
-            queue[file].insert(data);
+            stream[work.file].push_back(work);
+            queue[work.file].insert(work.data);
             this->running = true;
             lock.unlock();
         }
 
         // Each file descriptor has its own thread
-        if (threads.find(file) == threads.end())
-            threads[file] = thread(&TurboPipe::worker, this, file);
+        if (threads.find(work.file) == threads.end())
+            threads[work.file] = thread(&TurboPipe::worker, this, work.file);
 
         signal.notify_all();
+    }
+
+    void _sync(void* data=nullptr) {
+        // Wait for some or all queues to be empty, as they are erased when
+        // each thread's writing loop is done, guaranteeing finish
+        for (auto& values: queue) {
+            while (true) {
+                {
+                    // Prevent segfault on iteration on changing data
+                    lock_guard<mutex> lock(mutexes[values.first]);
+
+                    // Either all empty or some memory not queued (None or specific)
+                    if (data != nullptr && values.second.find(data) == values.second.end())
+                        break;
+                    if (data == nullptr && values.second.empty())
+                        break;
+                }
+                this_thread::sleep_for(chrono::microseconds(200));
+            }
+        }
     }
 
     void worker(int file) {
@@ -167,15 +170,15 @@ static PyObject* turbopipe_pipe(
     PyObject* Py_UNUSED(self),
     PyObject* args
 ) {
-    PyObject* memoryview;
+    PyObject* view;
     PyObject* file;
-    if (!PyArg_ParseTuple(args, "OO", &memoryview, &file))
+    if (!PyArg_ParseTuple(args, "OO", &view, &file))
         return NULL;
-    if (!PyMemoryView_Check(memoryview)) {
+    if (!PyMemoryView_Check(view)) {
         PyErr_SetString(PyExc_TypeError, "Expected a memoryview object");
         return NULL;
     }
-    turbopipe->pipe(memoryview, PyLong_AsLong(file));
+    turbopipe->pipe(view, PyLong_AsLong(file));
     Py_RETURN_NONE;
 }
 
@@ -183,14 +186,14 @@ static PyObject* turbopipe_sync(
     PyObject* Py_UNUSED(self),
     PyObject* args
 ) {
-    PyObject* memoryview;
-    if (!PyArg_ParseTuple(args, "|O", &memoryview))
+    PyObject* view;
+    if (!PyArg_ParseTuple(args, "|O", &view))
         return NULL;
-    if (memoryview != nullptr && !PyMemoryView_Check(memoryview)) {
+    if (view != nullptr && !PyMemoryView_Check(view)) {
         PyErr_SetString(PyExc_TypeError, "Expected a memoryview object or None");
         return NULL;
     }
-    turbopipe->sync(memoryview);
+    turbopipe->sync(view);
     Py_RETURN_NONE;
 }
 

@@ -337,3 +337,4 @@ On realistically loads, like [**ShaderFlow**](https://github.com/BrokenSource/Sh
 - Disable/investigate performance degradation on Windows iGPUs
 - Improve the thread synchronization and/or use a ThreadPool
 - Maybe use `mmap` instead of chunks writing on Linux
+- Split the code into a libturbopipe? Not sure where it would be useful 😅
