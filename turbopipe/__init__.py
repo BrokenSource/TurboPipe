@@ -32,7 +32,7 @@ def pipe(buffer: Union[Buffer, memoryview], fileno: int) -> None:
     if isinstance(buffer, Buffer):
         buffer = memoryview(buffer.mglo)
     _turbopipe.pipe(buffer, fileno)
-    buffer.release()
+    del buffer
 
 
 def sync(buffer: Optional[Union[Buffer, memoryview]]=None) -> None:
@@ -40,7 +40,7 @@ def sync(buffer: Optional[Union[Buffer, memoryview]]=None) -> None:
     if isinstance(buffer, Buffer):
         buffer = memoryview(buffer.mglo)
     _turbopipe.sync(buffer)
-    buffer.release()
+    del buffer
 
 
 def close() -> None:

@@ -32,14 +32,19 @@ jobs:
     runs-on: ${{matrix.os}}
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest, macos-14]
+        os: [
+          ubuntu-latest,
+          windows-latest,
+          macos-latest
+        ]
 
     env:
       CIBW_BUILD: cp37-* cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*
-      CIBW_ARCHS_LINUX: auto
+      CIBW_FREE_THREADED_SUPPORT: 1
+      CIBW_ARCHS_LINUX: auto aarch64
       CIBW_ARCHS_MACOS: arm64 x86_64
       CIBW_ARCHS_WINDOWS: auto
-      CIBW_SKIP: '*musllinux* *i686* *-win32'
+      CIBW_SKIP: '*-win32'
 
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +53,12 @@ jobs:
       - name: Install MSVC
         if: matrix.os == 'windows-latest'
         uses: bus1/cabuild/action/msdevshell@v1
+
+      - name: Install QEMU
+        if: runner.os == 'linux'
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: all
 
       - name: deps
         run: python -m pip install cibuildwheel==2.21.3
@@ -58,7 +69,7 @@ jobs:
       - name: upload
         uses: actions/upload-artifact@v4
         with:
-          name: package-wheels-${{ matrix.os }}
+          name: package-wheels-${{matrix.os}}
           path: package/*.whl
 
   publish:

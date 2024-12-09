@@ -29,9 +29,9 @@ using namespace std;
 // TurboPipe internals
 
 struct Work {
-    void*   data;
-    ssize_t size;
-    int     file;
+    void*  data;
+    size_t size;
+    int    file;
 };
 
 class TurboPipe {
@@ -41,7 +41,7 @@ public:
 
     void pipe(PyObject* view, int file) {
         Py_buffer data = *PyMemoryView_GET_BUFFER(view);
-        this->_pipe({data.buf, data.len, file});
+        this->_pipe({data.buf, (size_t) data.len, file});
     }
 
     void sync(PyObject* view=nullptr) {
