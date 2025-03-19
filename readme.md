@@ -1,6 +1,3 @@
-> [!IMPORTANT]
-> <sub>Also check out [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow), where **TurboPipe** shines! 😉</sub>
-<!-- PyPI -->
 <div align="center">
   <a href="https://brokensrc.dev/"><img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/turbopipe/resources/images/turbopipe.png" width="200"></a>
   <h1>TurboPipe</h1>
@@ -22,14 +19,16 @@
 
 The **optimizations** involved are:
 
-- **Zero-copy**: Avoid unnecessary memory copies or allocation (intermediate `buffer.read()`)
+- **Zero-copy**: Avoid unnecessary memory copies or allocation (intermediate `buffer.read`)
 - **C++**: The core of TurboPipe is written in C++ for speed, efficiency and low-level control
-- **Chunks**: Write in chunks of 4096 bytes (RAM page size), so the hardware is happy (Unix)
 - **Threaded**:
     - Doesn't block Python code execution, allows to render next frame
     - Decouples the main thread from the I/O thread for performance
+- **Chunks**: Write in chunks of 4096 bytes (RAM page size), so the hardware is happy (Unix)
 
 ✅ Don't worry, there's proper **safety** in place. TurboPipe will block Python if a memory address is already queued for writing, and guarantees order of writes per file-descriptor. Just call `.sync()` when done 😉
+
+<sub>Also check out [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow), where **TurboPipe** shines! 😉</sub>
 
 <br>
 
@@ -55,7 +54,7 @@ rye add turbopipe
 
 # 🚀 Usage
 
-See also the [**Examples**](https://github.com/BrokenSource/TurboPipe/tree/main/examples) folder for comparisons, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Scene.py) usage of it!
+See also the [**Examples**](https://github.com/BrokenSource/TurboPipe/tree/main/examples) folder for comparisons, and [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow/blob/main/ShaderFlow/Exporting.py)'s usage of it!
 
 ```python
 import subprocess
@@ -63,27 +62,53 @@ import subprocess
 import moderngl
 import turbopipe
 
-# Create ModernGL objects
+# Create ModernGL objects and proxy buffers
 ctx = moderngl.create_standalone_context()
-buffers = [ctx.buffer(reserve=1920*1080*3) for _ in range(2)]
+width, height, duration, fps = (1920, 1080, 10, 60)
+buffers = [
+    ctx.buffer(reserve=(width*height*3))
+    for _ in range(nbuffers := 2)
+]
+
+# Create your FBO, Textures, Shaders, etc.
 
 # Make sure resolution, pixel format matches!
-ffmpeg = subprocess.Popen(
-    'ffmpeg -f rawvideo -pix_fmt rgb24 -r 60 -s 1920x1080 -i - -f null -'.split(),
-    stdin=subprocess.PIPE
-)
+ffmpeg = subprocess.Popen((
+    "ffmpeg",
+    "-f", "rawvideo",
+    "-pix_fmt", "rgb24",
+    "-r", str(fps),
+    "-s", f"{width}x{height}",
+    "-i", "-",
+    "-f", "null",
+    "output.mp4"
+), stdin=subprocess.PIPE)
 
-# Rendering loop of yours (eg. 1m footage)
-for frame in range(60 * 60):
-    buffer = buffers[frame % len(buffer)]
+# Rendering loop of yours
+for frame in range(duration*fps):
+    buffer = buffers[frame % nbuffers]
+
+    # Wait queued writes before copying
     turbopipe.sync(buffer)
     fbo.read_into(buffer)
+
+    # Doesn't lock the GIL, writes in parallel
     turbopipe.pipe(buffer, ffmpeg.stdin.fileno())
 
-# Finalize writing, encoding
+# Wait for queued writes, clean memory
+for buffer in buffers:
+    turbopipe.sync(buffer)
+    buffer.release()
+
+# Signal stdin stream is done
 ffmpeg.stdin.close()
-turbopipe.close()
+
+# wait for encoding to finish
 ffmpeg.wait()
+
+# Warn: Albeit rare, only call close when no other data
+# write is pending, as it might skip a frame or halt
+turbopipe.close()
 ```
 
 <br>
@@ -335,6 +360,5 @@ On realistically loads, like [**ShaderFlow**](https://github.com/BrokenSource/Sh
 # 📚 Future work
 
 - Disable/investigate performance degradation on Windows iGPUs
-- Improve the thread synchronization and/or use a ThreadPool
 - Maybe use `mmap` instead of chunks writing on Linux
 - Split the code into a libturbopipe? Not sure where it would be useful 😅

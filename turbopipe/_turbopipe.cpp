@@ -1,9 +1,6 @@
 // ------------------------------------------------------------------------------------------------|
-//
 // TurboPipe - Faster ModernGL Buffers inter-process data transfers for subprocesses
-//
-// (c) 2024, Tremeschin, MIT License
-//
+// (c) MIT License 2024-2025, Tremeschin
 // ------------------------------------------------------------------------------------------------|
 
 #define PY_SSIZE_T_CLEAN
@@ -41,77 +38,77 @@ public:
 
     void pipe(PyObject* view, int file) {
         Py_buffer data = *PyMemoryView_GET_BUFFER(view);
-        this->_pipe({data.buf, (size_t) data.len, file});
+        this->_pipe(data.buf, (size_t) data.len, file);
     }
 
     void sync(PyObject* view=nullptr) {
-        void* data = nullptr;
-
-        if (view != nullptr) {
-            Py_buffer temp = *PyMemoryView_GET_BUFFER(view);
-            data = temp.buf;
-        }
-
-        this->_sync(data);
+        if (view != nullptr)
+            this->_sync((*PyMemoryView_GET_BUFFER(view)).buf);
+        else
+            this->_sync(nullptr);
     }
 
     void close() {
-        sync();
-        running = false;
-        signal.notify_all();
-        for (auto& pair: threads)
+        this->_sync();
+        this->running = false;
+        for (auto& pair: this->signal)
+            pair.second.notify_all();
+        for (auto& pair: this->threads)
             pair.second.join();
-        threads.clear();
+        this->threads.clear();
     }
 
 private:
-    unordered_map<int, unordered_map<void*, condition_variable>> pending;
+    unordered_map<int, condition_variable> pending;
+    unordered_map<int, condition_variable> signal;
     unordered_map<int, unordered_set<void*>> queue;
     unordered_map<int, deque<Work>> stream;
     unordered_map<int, thread> threads;
     unordered_map<int, mutex> mutexes;
-    condition_variable signal;
     bool running;
 
-    void _pipe(Work work) {
-        unique_lock<mutex> lock(mutexes[work.file]);
+    void _pipe(void* data, size_t size, int file) {
+        unique_lock<mutex> lock(this->mutexes[file]);
 
         /* Notify this memory is queued, wait if pending */ {
-            if (!queue[work.file].insert(work.data).second) {
-                pending[work.file][work.data].wait(lock, [this, work] {
-                    return queue[work.file].find(work.data) == queue[work.file].end();
+            if (!this->queue[file].insert(data).second) {
+                this->pending[file].wait(lock, [this, file, data] {
+                    return this->queue[file].find(data) == this->queue[file].end();
                 });
             }
         }
 
         /* Add another job to the queue */ {
-            stream[work.file].push_back(work);
-            queue[work.file].insert(work.data);
+            this->stream[file].push_back(Work{data, size, file});
+            this->queue[file].insert(data);
             this->running = true;
             lock.unlock();
         }
 
         // Each file descriptor has its own thread
-        if (threads.find(work.file) == threads.end())
-            threads[work.file] = thread(&TurboPipe::worker, this, work.file);
+        if (this->threads.find(file) == this->threads.end())
+            this->threads[file] = thread(&TurboPipe::worker, this, file);
 
-        signal.notify_all();
+        // Trigger the worker to write the data
+        this->signal[file].notify_all();
     }
 
     void _sync(void* data=nullptr) {
-        // Wait for some or all queues to be empty, as they are erased when
-        // each thread's writing loop is done, guaranteeing finish
-        for (auto& values: queue) {
+        for (auto& values: this->queue) {
             while (true) {
                 {
                     // Prevent segfault on iteration on changing data
-                    lock_guard<mutex> lock(mutexes[values.first]);
+                    lock_guard<mutex> lock(this->mutexes[values.first]);
 
-                    // Either all empty or some memory not queued (None or specific)
-                    if (data != nullptr && values.second.find(data) == values.second.end())
-                        break;
-                    if (data == nullptr && values.second.empty())
-                        break;
+                    // Continue if specific data is not in queue
+                    if (data != nullptr)
+                        if (values.second.find(data) == values.second.end())
+                            break;
+
+                    // Continue if all queues are empty
+                    if (data == nullptr)
+                        if (values.second.empty())
+                            break;
                 }
                 this_thread::sleep_for(chrono::microseconds(200));
             }
@@ -120,30 +117,29 @@ private:
 
     void worker(int file) {
         while (this->running) {
-            unique_lock<mutex> lock(mutexes[file]);
+            unique_lock<mutex> lock(this->mutexes[file]);
 
-            signal.wait(lock, [this, file] {
-                return (!stream[file].empty() || !this->running);
+            this->signal[file].wait(lock, [this, file] {
+                return (!this->stream[file].empty() || !this->running);
             });
 
             // Skip on false positives, exit condition
-            if (stream[file].empty()) continue;
+            if ( this->stream[file].empty()) continue;
             if (!this->running) break;
 
             // Get the next work item
-            Work work = stream[file].front();
-            stream[file].pop_front();
+            Work work = this->stream[file].front();
+            this->stream[file].pop_front();
             lock.unlock();
 
             #ifdef _WIN32
-                // Windows doesn't like chunked writes ??
+                // Fixme: Windows doesn't like chunked writes?
                 write(work.file, (char*) work.data, work.size);
             #else
-                // Optimization: Write in chunks of 4096 (RAM page size)
                 size_t tell = 0;
                 while (tell < work.size) {
                     size_t chunk = min(work.size - tell, static_cast<size_t>(4096));
-                    size_t written = write(work.file, (char*) work.data + tell, chunk);
+                    int written = write(work.file, (char*) work.data + tell, chunk);
                     if (written == -1) break;
                     tell += written;
                 }
@@ -152,9 +148,9 @@ private:
             lock.lock();
 
             /* Signal work is done */ {
-                pending[file][work.data].notify_all();
-                queue[file].erase(work.data);
-                signal.notify_all();
+                this->pending[file].notify_all();
+                this->queue[file].erase(work.data);
+                this->signal[file].notify_all();
             }
         }
     }
