@@ -215,18 +215,25 @@ static PyMethodDef TurboPipeMethods[] = {
     {NULL, NULL, 0, NULL}
 };
 
-static struct PyModuleDef turbopipe_module = {
+static struct PyModuleDef TurboPipeModule = {
     PyModuleDef_HEAD_INIT,
-    "_turbopipe",
-    NULL, -1,
-    TurboPipeMethods,
-    NULL, NULL, NULL, NULL
+    .m_name     = "_turbopipe",
+    .m_doc      = NULL,
+    .m_size     = -1,
+    .m_methods  = TurboPipeMethods,
+    .m_slots    = NULL,
+    .m_traverse = NULL,
+    .m_clear    = NULL,
+    .m_free     = NULL
 };
 
 PyMODINIT_FUNC PyInit__turbopipe(void) {
-    PyObject* module = PyModule_Create(&turbopipe_module);
+    PyObject* module = PyModule_Create(&TurboPipeModule);
     if (module == NULL)
         return NULL;
+    #ifdef Py_GIL_DISABLED
+        PyUnstable_Module_SetGIL(module, Py_MOD_GIL_NOT_USED);
+    #endif
     turbopipe = new TurboPipe();
     Py_AtExit(turbopipe_exit);
     return module;
