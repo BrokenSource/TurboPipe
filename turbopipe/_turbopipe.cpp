@@ -134,7 +134,7 @@ private:
 
             #ifdef _WIN32
                 // Fixme: Windows doesn't like chunked writes?
-                write(work.file, (char*) work.data, work.size);
+                write(work.file, (char*) work.data, static_cast<unsigned int>(work.size));
             #else
                 size_t tell = 0;
                 while (tell < work.size) {
