@@ -42,6 +42,7 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
       - uses: astral-sh/setup-uv@v6
 
       - name: Install MSVC
@@ -75,7 +76,7 @@ jobs:
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
-          pattern: 'dist-*'
+          pattern: 'package-*'
           merge-multiple: true
           path: dist
 
@@ -89,7 +90,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
 
       - name: Get version
         run: echo VERSION=$(uv run turbopipe/version.py) >> $GITHUB_ENV
