@@ -1,0 +1,24 @@
+[project.urls]
+GitHub  = "https://github.com/BrokenSource/TurboPipe"
+Funding = "https://github.com/sponsors/Tremeschin"
+
+[project]
+name        = "turbopipe"
+description = "🌀 Faster ModernGL Buffers inter-process data transfers for subprocesses"
+authors     = [{name="Tremeschin"}]
+dynamic     = ["version"]
+readme      = ".github/readme.md"
+requires-python = ">=3.9"
+dependencies = [
+    "moderngl"
+]
+
+[tool.uv]
+managed = false
+
+[build-system]
+requires = ["maturin>=1.9,<2.0"]
+build-backend = "maturin"
+
+[tool.maturin]
+features = ["pyo3/extension-module"]
