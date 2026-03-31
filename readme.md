@@ -1,5 +1,5 @@
 <div align="center">
-  <a href="https://brokensrc.dev/"><img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/turbopipe/resources/images/turbopipe.png" width="200"></a>
+  <img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/turbopipe/resources/images/turbopipe.png" width="200">
   <h1>TurboPipe</h1>
   Faster <a href="https://github.com/moderngl/moderngl"><b>ModernGL Buffers</b></a> inter-process data transfers for subprocesses
   <br>
