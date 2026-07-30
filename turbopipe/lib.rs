@@ -28,7 +28,7 @@ pub struct Work {
 }
 
 impl Data {
-    fn from_memoryview(memoryview: Py<PyMemoryView>) -> Self {
+    pub fn from_memoryview(memoryview: Py<PyMemoryView>) -> Self {
         unsafe {
             let mut buffer = pyo3::ffi::Py_buffer::new();
 
@@ -134,9 +134,8 @@ impl TurboPipe {
 
     /// Ensures this memory is not pending
     pub fn sync(&self, data: Pointer) {
-        if let Some(wait) = self.sync.get(&data) {
-            let sync = wait.clone_untracked();
-            sync.wait();
+        if let Some(sync) = self.sync.get(&data) {
+            sync.wait_untracked();
         }
     }
 

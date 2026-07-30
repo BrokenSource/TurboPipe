@@ -1,6 +1,7 @@
 //! This module is based on `crossbeam_utils::sync::WaitGroup`
 //!
-//! - Added an untracked clone method that does not increase the count.
+//! - Changed default count to 0 for persistent containers usage
+//! - Added wait_untracked for clone-less waiting
 //!
 //! License: Same as upstream crate (MIT OR Apache-2.0)
 
@@ -27,7 +28,7 @@ impl Default for WaitGroup {
             inner: Arc::new(Inner {
                 cvar: Condvar::new(),
                 lock: Mutex::new(()),
-                count: AtomicUsize::new(1),
+                count: AtomicUsize::new(0),
             }),
         }
     }
@@ -56,10 +57,15 @@ impl WaitGroup {
         }
     }
 
-    // TurboPipe addition: Clone that does not increment count
-    pub fn clone_untracked(&self) -> Self {
-        Self {
-            inner: self.inner.clone(),
+    pub fn wait_untracked(&self) {
+        if self.inner.count.load(Ordering::Acquire) == 0 {
+            return;
+        }
+
+        let mut guard = self.inner.lock.lock().unwrap();
+
+        while self.inner.count.load(Ordering::Acquire) != 0 {
+            guard = self.inner.cvar.wait(guard).unwrap();
         }
     }
 }
