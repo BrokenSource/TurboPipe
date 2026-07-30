@@ -1,0 +1,30 @@
+[package]
+name = "turbopipe"
+version = "2.0.0"
+edition = "2024"
+
+[lib]
+name = "turbopipe"
+path = "turbopipe/lib.rs"
+crate-type = ["cdylib"]
+
+[dependencies]
+crossbeam = "0.8"
+crossbeam-channel = "0.5"
+dashmap = "6.2"
+libc = "0.2"
+
+[dependencies.pyo3]
+version = "0.29"
+features = ["abi3-py311"]
+
+[profile.dev]
+strip = true
+
+[profile.release]
+overflow-checks = false
+codegen-units = 1
+opt-level = 3
+panic = "abort"
+strip = true
+lto = "fat"
