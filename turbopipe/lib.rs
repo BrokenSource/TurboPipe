@@ -1,128 +1,167 @@
 use std::sync::LazyLock;
 
-use crossbeam::sync::WaitGroup;
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
-use crossbeam_channel::unbounded;
+use crossbeam_utils::sync::WaitGroup;
 use dashmap::DashMap;
-use pyo3::ffi::Py_buffer;
-use pyo3::ffi::PyBUF_SIMPLE;
 use pyo3::prelude::*;
 use pyo3::types::PyMemoryView;
 
-type Pointer = usize;
-type File = i32;
+pub type Pointer = usize;
+pub type Length = usize;
+pub type File = usize;
 
-#[derive(Clone, Debug)]
-struct Work {
-    data: Pointer,
-    size: isize,
-    file: File,
-    wait: WaitGroup,
+/* -------------------------------------------------------------------------- */
+
+/// Some memory region
+pub struct Data {
+    pub ptr: Pointer,
+    pub len: Length,
 }
 
-impl Work {
-    fn from_buffer(memoryview: Py<PyMemoryView>) -> Self {
+/// Queued write
+pub struct Work {
+    pub data: Data,
+    pub sync: WaitGroup,
+}
+
+impl Data {
+    fn from_memoryview(memoryview: Py<PyMemoryView>) -> Self {
         unsafe {
-            let mut buffer: Py_buffer = std::mem::zeroed();
+            let mut buffer = pyo3::ffi::Py_buffer::new();
 
-            pyo3::ffi::PyObject_GetBuffer(memoryview.as_ptr(), &mut buffer, PyBUF_SIMPLE);
+            // Stable in >=3.11 for abi3
+            pyo3::ffi::PyObject_GetBuffer(
+                memoryview.as_ptr(),
+                &mut buffer,
+                pyo3::ffi::PyBUF_SIMPLE,
+            );
+
+            // Get only pointer and size
+            let this = Self {
+                ptr: buffer.buf as Pointer,
+                len: buffer.len as Length,
+            };
+
+            // Fixme: Works, but is it always valid?
             pyo3::ffi::PyBuffer_Release(&mut buffer);
-
-            Self {
-                data: buffer.buf as Pointer,
-                size: buffer.len as isize,
-                wait: WaitGroup::new(),
-                file: 0,
-            }
+            return this;
         }
     }
 }
 
-struct TurboPipe {
-    send: DashMap<File, Sender<Option<Work>>>,
-    wait: DashMap<Pointer, WaitGroup>,
+/* -------------------------------------------------------------------------- */
+
+pub struct TurboPipe {
+    /// Channels for queueing pipes (mpsc + fifo)
+    pub send: DashMap<File, Sender<Option<Work>>>,
+
+    /// Barrier for pending pipes in pointers
+    pub sync: DashMap<Pointer, WaitGroup>,
 }
 
 impl TurboPipe {
     pub fn new() -> Self {
         Self {
             send: DashMap::new(),
-            wait: DashMap::new(),
+            sync: DashMap::new(),
         }
     }
 
-    pub fn pipe(&self, data: Pointer, size: isize, file: File) {
-        self.sync(data);
-        let wait = self.wait.entry(data).or_insert_with(WaitGroup::new).clone();
+    /// Queues some data to be written into the file descriptor by a worker
+    ///
+    /// - Callers must use [`TurboPipe::sync`] to wait on prior pipes
+    /// - File descriptor (or handler) must be open and valid in the OS
+    ///
+    pub fn pipe(&self, data: Data, file: File) {
+        // Get or create the work sync barrier
+        let sync = self.sync.entry(data.ptr).or_insert_with(WaitGroup::new);
 
-        // Create worker thread
-        if !self.send.contains_key(&file) {
-            let (send, receive) = unbounded();
-            self.send.insert(file, send);
-            std::thread::spawn(move || Self::worker(file, receive));
-        }
+        // Get or create the channel and its worker
+        let sender = self.send.entry(file).or_insert_with(|| {
+            let (send, receive) = crossbeam_channel::bounded(32);
+            std::thread::spawn(move || Self::worker(receive, file));
+            return send;
+        });
 
-        // Send work to channel
-        if let Some(sender) = self.send.get(&file) {
-            let work = Work {
-                data,
-                size,
-                file,
-                wait,
-            };
-            sender.send(Some(work)).expect("Send failed");
-        }
+        // Attach barrier
+        let work = Work {
+            data,
+            sync: sync.clone(),
+        };
+
+        sender.send(Some(work)).expect("Send failed");
     }
 
-    fn worker(file: File, receiver: Receiver<Option<Work>>) {
+    /// Controls the chunk size in bytes a worker writes
+    pub fn chunk() -> usize {
+        static VALUE: LazyLock<usize> = LazyLock::new(|| {
+            std::env::var("TURBOPIPE_CHUNK_SIZE")
+                .ok()
+                .and_then(|v| v.parse().ok())
+                .unwrap_or(if cfg!(windows) { usize::MAX } else { 8192 })
+        });
+        *VALUE
+    }
+
+    /// Eternally reads and writes a work's data to the bound file descriptor.
+    ///
+    /// - Only one worker must exist per file descriptor (synchronization)
+    /// - Poison-pill implementation with Option<Work>
+    ///
+    fn worker(receiver: Receiver<Option<Work>>, file: File) {
         while let Ok(Some(work)) = receiver.recv() {
             let mut written = 0;
 
-            while written < work.size {
+            // Note: Chunked writes experimentally gave up to +100% speed
+            //   improvements on certain systems, really not sure why.
+            while written < work.data.len {
                 written += unsafe {
                     libc::write(
-                        file,
-                        (work.data as *const u8).add(written as usize) as *const libc::c_void,
-                        (work.size - written).min(4096) as usize,
-                    )
+                        file as libc::c_int,
+                        (work.data.ptr as *const u8).add(written).cast(),
+                        (work.data.len - written).min(Self::chunk()).into(),
+                    ) as Length
                 };
             }
 
-            drop(work.wait);
+            // Signal work done
+            drop(work.sync);
         }
     }
 
     /// Ensures this memory is not pending
     pub fn sync(&self, data: Pointer) {
-        if let Some((_, wait)) = self.wait.remove(&data) {
-            wait.wait();
+        if let Some((_, sync)) = self.sync.remove(&data) {
+            sync.wait();
         }
     }
 
+    /// Waits for all pending writes to this file to finish
     pub fn close(&self, file: File) {
         if let Some(sender) = self.send.get(&file) {
-            let _ = sender.send(None);
+            sender.send(None).expect("Send failed");
             self.send.remove(&file);
         }
     }
 }
 
+/* -------------------------------------------------------------------------- */
+
 /// Global and the only turbopipe instance that should exist
-static TURBOPIPE: LazyLock<TurboPipe> = LazyLock::new(TurboPipe::new);
+pub static TURBOPIPE: LazyLock<TurboPipe> = LazyLock::new(TurboPipe::new);
 
 #[pyfunction]
-fn pipe(buffer: Py<PyMemoryView>, file: File) -> PyResult<()> {
-    let mut work = Work::from_buffer(buffer);
-    work.file = file;
-    TURBOPIPE.pipe(work.data, work.size, file);
+fn pipe(view: Py<PyMemoryView>, file: File) -> PyResult<()> {
+    let frame = Data::from_memoryview(view);
+    TURBOPIPE.pipe(frame, file);
     Ok(())
 }
 
 #[pyfunction]
-fn sync(buffer: Py<PyMemoryView>) -> PyResult<()> {
-    let work = Work::from_buffer(buffer);
-    TURBOPIPE.sync(work.data);
+fn sync(view: Py<PyMemoryView>) -> PyResult<()> {
+    let frame = Data::from_memoryview(view);
+    TURBOPIPE.sync(frame.ptr);
     Ok(())
 }
 
