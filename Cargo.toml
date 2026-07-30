@@ -16,7 +16,10 @@ libc = "0.2"
 
 [dependencies.pyo3]
 version = "0.29"
-features = ["abi3-py311"]
+features = [
+    "abi3-py311",
+    "abi3t",
+]
 
 [profile.dev]
 strip = true

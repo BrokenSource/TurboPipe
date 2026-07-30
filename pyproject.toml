@@ -18,3 +18,7 @@ build-backend = "maturin"
 exclude     = ["**/*.rs"]
 features    = ["pyo3/extension-module"]
 module-name = "turbopipe._turbopipe"
+
+[tool.maturin.generate-ci.github]
+trusted-publishing = true
+publishing-environment = "release"

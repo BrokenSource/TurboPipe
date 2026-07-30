@@ -132,7 +132,7 @@ fn close(file: File) -> PyResult<()> {
     Ok(())
 }
 
-#[pymodule]
+#[pymodule(gil_used = false)]
 fn _turbopipe(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(pipe, module)?)?;
     module.add_function(wrap_pyfunction!(sync, module)?)?;
