@@ -10,7 +10,6 @@ crate-type = ["cdylib"]
 
 [dependencies]
 crossbeam-channel = "0.5.16"
-crossbeam-utils = "0.8"
 dashmap = "6.2"
 libc = "0.2"
 

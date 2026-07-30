@@ -213,7 +213,6 @@ name = "turbopipe"
 version = "2.0.0"
 dependencies = [
  "crossbeam-channel",
- "crossbeam-utils",
  "dashmap",
  "libc",
  "pyo3",

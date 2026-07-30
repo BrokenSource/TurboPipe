@@ -2,10 +2,12 @@ use std::sync::LazyLock;
 
 use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
-use crossbeam_utils::sync::WaitGroup;
 use dashmap::DashMap;
 use pyo3::prelude::*;
 use pyo3::types::PyMemoryView;
+
+mod wait;
+use wait::WaitGroup;
 
 pub type Pointer = usize;
 pub type Length = usize;
@@ -132,7 +134,8 @@ impl TurboPipe {
 
     /// Ensures this memory is not pending
     pub fn sync(&self, data: Pointer) {
-        if let Some((_, sync)) = self.sync.remove(&data) {
+        if let Some(wait) = self.sync.get(&data) {
+            let sync = wait.clone_untracked();
             sync.wait();
         }
     }
