@@ -8,7 +8,7 @@ __license__ = "MIT"
 def pipe(buffer: memoryview, file: int) -> None:
     _turbopipe.pipe(buffer, file)
 
-def sync(buffer: memoryview | None=None) -> None:
+def sync(buffer: memoryview) -> None:
     """Wait for pending operations on a buffer to finish"""
     _turbopipe.sync(buffer)
 
