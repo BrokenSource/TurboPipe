@@ -1,6 +1,6 @@
 [project]
 name        = "turbopipe"
-description = "🌀 Faster ModernGL Buffers inter-process data transfers for subprocesses"
+description = "🌀 Fast memoryview data piping"
 version     = "2.0.0"
 license     = "MIT"
 readme      = "readme.md"
@@ -15,7 +15,6 @@ requires = ["maturin>=1.9,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
-exclude     = ["**/*.rs"]
 features    = ["pyo3/extension-module"]
 module-name = "turbopipe._turbopipe"
 
