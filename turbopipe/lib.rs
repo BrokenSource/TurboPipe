@@ -122,7 +122,10 @@ impl TurboPipe {
                     libc::write(
                         file as libc::c_int,
                         (work.data.ptr as *const u8).add(written).cast(),
-                        (work.data.len - written).min(Self::chunk()).into(),
+                        (work.data.len - written)
+                            .min(Self::chunk())
+                            .try_into()
+                            .unwrap(),
                     ) as Length
                 };
             }
