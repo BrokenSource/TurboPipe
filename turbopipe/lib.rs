@@ -118,7 +118,7 @@ impl TurboPipe {
             // Note: Chunked writes experimentally gave up to +100% speed
             //   improvements on certain systems, really not sure why.
             while written < work.data.len {
-                written += unsafe {
+                let tell = unsafe {
                     libc::write(
                         file as libc::c_int,
                         (work.data.ptr as *const u8).add(written).cast(),
@@ -126,8 +126,15 @@ impl TurboPipe {
                             .min(Self::chunk())
                             .try_into()
                             .unwrap(),
-                    ) as Length
+                    )
                 };
+
+                // Cannot progress
+                if tell <= 0 {
+                    panic!("Failed write: {}", std::io::Error::last_os_error());
+                }
+
+                written += tell as Length;
             }
 
             // Signal work done
