@@ -158,15 +158,15 @@ pub static TURBOPIPE: LazyLock<TurboPipe> = LazyLock::new(TurboPipe::new);
 
 #[pyfunction]
 fn pipe(view: Py<PyMemoryView>, file: File) -> PyResult<()> {
-    let frame = Data::from_memoryview(view);
-    TURBOPIPE.pipe(frame, file);
+    let data = Data::from_memoryview(view);
+    TURBOPIPE.pipe(data, file);
     Ok(())
 }
 
 #[pyfunction]
 fn sync(view: Py<PyMemoryView>) -> PyResult<()> {
-    let frame = Data::from_memoryview(view);
-    TURBOPIPE.sync(frame.ptr);
+    let data = Data::from_memoryview(view);
+    TURBOPIPE.sync(data.ptr);
     Ok(())
 }
 

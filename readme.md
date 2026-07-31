@@ -48,11 +48,14 @@ data = memoryview(os.urandom(1000))
 
 with open("/dev/null", "wb") as stream:
 
-    # Native python method
+    # Native python method (sync)
     stream.write(data)
 
-    # Fast turbopipe method
+    # Fast turbopipe method (async)
     turbopipe.pipe(data, stream.fileno())
+
+# Wait for queued writes
+turbopipe.sync(data)
 ```
 
 Alternatively, for subprocesses:
@@ -107,6 +110,7 @@ while not scene.finished:
     turbopipe.pipe(memoryview(buffer.mglo, fileno))
 
 # Sync all buffers, cleanup, etc.
+turbopipe.sync(memoryview(buffer.mglo))
 ffmpeg.stdin.close()
 ```
 
