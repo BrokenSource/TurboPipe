@@ -4,11 +4,11 @@ use crossbeam_channel::Receiver;
 use crossbeam_channel::Sender;
 use dashmap::DashMap;
 use pyo3::prelude::*;
-use pyo3::types::PyMemoryView;
 
 mod wait;
 use wait::WaitGroup;
 
+pub type ObjectID = usize;
 pub type Pointer = usize;
 pub type Length = usize;
 pub type File = usize;
@@ -17,6 +17,7 @@ pub type File = usize;
 
 /// Some memory region
 pub struct Data {
+    pub obj: ObjectID,
     pub ptr: Pointer,
     pub len: Length,
 }
@@ -28,19 +29,20 @@ pub struct Work {
 }
 
 impl Data {
-    pub fn from_memoryview(memoryview: Py<PyMemoryView>) -> Self {
+    pub fn from_object(object: Py<PyAny>) -> Self {
         unsafe {
             let mut buffer = pyo3::ffi::Py_buffer::new();
 
             // Stable in >=3.11 for abi3
             pyo3::ffi::PyObject_GetBuffer(
-                memoryview.as_ptr(),
+                object.as_ptr(),
                 &mut buffer,
                 pyo3::ffi::PyBUF_SIMPLE,
             );
 
-            // Get only pointer and size
+            // Get mapped metadata
             let this = Self {
+                obj: buffer.obj as ObjectID,
                 ptr: buffer.buf as Pointer,
                 len: buffer.len as Length,
             };
@@ -59,7 +61,7 @@ pub struct TurboPipe {
     pub send: DashMap<File, Sender<Option<Work>>>,
 
     /// Barrier for pending pipes in pointers
-    pub sync: DashMap<Pointer, WaitGroup>,
+    pub sync: DashMap<ObjectID, WaitGroup>,
 }
 
 impl TurboPipe {
@@ -77,7 +79,7 @@ impl TurboPipe {
     ///
     pub fn pipe(&self, data: Data, file: File) {
         // Get or create the work sync barrier
-        let sync = self.sync.entry(data.ptr).or_insert_with(WaitGroup::new);
+        let sync = self.sync.entry(data.obj).or_insert_with(WaitGroup::new);
 
         // Get or create the channel and its worker
         let sender = self.send.entry(file).or_insert_with(|| {
@@ -143,7 +145,7 @@ impl TurboPipe {
     }
 
     /// Ensures this memory is not pending
-    pub fn sync(&self, data: Pointer) {
+    pub fn sync(&self, data: ObjectID) {
         if let Some(sync) = self.sync.get(&data) {
             sync.wait_untracked();
         }
@@ -164,16 +166,15 @@ impl TurboPipe {
 pub static TURBOPIPE: LazyLock<TurboPipe> = LazyLock::new(TurboPipe::new);
 
 #[pyfunction]
-fn pipe(view: Py<PyMemoryView>, file: File) -> PyResult<()> {
-    let data = Data::from_memoryview(view);
+fn pipe(view: Py<PyAny>, file: File) -> PyResult<()> {
+    let data = Data::from_object(view);
     TURBOPIPE.pipe(data, file);
     Ok(())
 }
 
 #[pyfunction]
-fn sync(view: Py<PyMemoryView>) -> PyResult<()> {
-    let data = Data::from_memoryview(view);
-    TURBOPIPE.sync(data.ptr);
+fn sync(view: Py<PyAny>) -> PyResult<()> {
+    TURBOPIPE.sync(view.as_ptr() as ObjectID);
     Ok(())
 }
 
