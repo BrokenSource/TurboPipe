@@ -1,5 +1,5 @@
 <div align="center">
-  <img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/turbopipe/website/assets/logo.png" width="200">
+  <img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/website/assets/logo.png" width="200">
   <h1>TurboPipe</h1>
   Faster ModernGL buffers inter-process data transfers
   <br><br>
