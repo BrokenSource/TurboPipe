@@ -80,6 +80,7 @@ impl TurboPipe {
 
     /// Queues some data to be written into the file descriptor by a worker
     ///
+    /// Safety:
     /// - Callers must use [`TurboPipe::sync`] to wait on prior pipes
     /// - File descriptor (or handler) must be open and valid in the OS
     ///
@@ -116,7 +117,8 @@ impl TurboPipe {
 
     /// Eternally reads and writes a work's data to the bound file descriptor.
     ///
-    /// - Only one worker must exist per file descriptor (synchronization)
+    /// Safety:
+    /// - Only one eternal worker must exist per file descriptor
     /// - Poison-pill implementation with Option<Work>
     ///
     fn worker(receiver: Receiver<Option<Work>>, file: File) {
@@ -157,12 +159,9 @@ impl TurboPipe {
         }
     }
 
-    /// Signals worker threads for this file descriptor to stop
-    pub fn close(&self, file: File) {
-        if let Some(sender) = self.send.get(&file) {
-            sender.send(None).expect("Send failed");
-            self.send.remove(&file);
-        }
+    /// Signal this data won't be used again
+    pub fn done(&self, obj: ObjectID) {
+        self.sync.remove(&obj);
     }
 }
 
@@ -172,21 +171,21 @@ impl TurboPipe {
 pub static TURBOPIPE: LazyLock<TurboPipe> = LazyLock::new(TurboPipe::new);
 
 #[pyfunction]
-fn _pipe(view: Py<PyAny>, file: File) -> PyResult<()> {
-    let data = Data::from_object(view)?;
+fn _pipe(data: Py<PyAny>, file: File) -> PyResult<()> {
+    let data = Data::from_object(data)?;
     TURBOPIPE.pipe(data, file);
     Ok(())
 }
 
 #[pyfunction]
-fn _sync(view: Py<PyAny>) -> PyResult<()> {
-    TURBOPIPE.sync(view.as_ptr() as ObjectID);
+fn _sync(data: Py<PyAny>) -> PyResult<()> {
+    TURBOPIPE.sync(data.as_ptr() as ObjectID);
     Ok(())
 }
 
 #[pyfunction]
-fn _close(file: File) -> PyResult<()> {
-    TURBOPIPE.close(file);
+fn _done(data: Py<PyAny>) -> PyResult<()> {
+    TURBOPIPE.done(data.as_ptr() as ObjectID);
     Ok(())
 }
 
@@ -194,6 +193,6 @@ fn _close(file: File) -> PyResult<()> {
 fn _turbopipe(module: &Bound<'_, PyModule>) -> PyResult<()> {
     module.add_function(wrap_pyfunction!(_pipe, module)?)?;
     module.add_function(wrap_pyfunction!(_sync, module)?)?;
-    module.add_function(wrap_pyfunction!(_close, module)?)?;
+    module.add_function(wrap_pyfunction!(_done, module)?)?;
     Ok(())
 }

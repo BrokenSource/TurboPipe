@@ -64,6 +64,7 @@ with FFmpeg() as ffmpeg:
 
     for buffer in buffers:
         turbopipe.sync(buffer.mglo)
+        turbopipe.done(buffer.mglo)
 
     ffmpeg.stdin.close()
     ffmpeg.wait()

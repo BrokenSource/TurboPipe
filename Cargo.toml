@@ -1,8 +1,8 @@
 [package]
 name        = "turbopipe"
-description = "🌀 Fast memoryview data piping"
+description = "🌀 Fast data piping for python"
 repository  = "https://github.com/BrokenSource/TurboPipe"
-version     = "2.0.1"
+version     = "2.1.0"
 readme      = "readme.md"
 license     = "MIT"
 edition     = "2024"
