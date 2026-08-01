@@ -150,14 +150,14 @@ impl TurboPipe {
         }
     }
 
-    /// Ensures this memory is not pending
-    pub fn sync(&self, data: ObjectID) {
-        if let Some(sync) = self.sync.get(&data) {
+    /// Wait for queued pipes in this buffer to finish
+    pub fn sync(&self, obj: ObjectID) {
+        if let Some(sync) = self.sync.get(&obj) {
             sync.wait_untracked();
         }
     }
 
-    /// Waits for all pending writes to this file to finish
+    /// Signals worker threads for this file descriptor to stop
     pub fn close(&self, file: File) {
         if let Some(sender) = self.send.get(&file) {
             sender.send(None).expect("Send failed");
@@ -172,28 +172,28 @@ impl TurboPipe {
 pub static TURBOPIPE: LazyLock<TurboPipe> = LazyLock::new(TurboPipe::new);
 
 #[pyfunction]
-fn pipe(view: Py<PyAny>, file: File) -> PyResult<()> {
+fn _pipe(view: Py<PyAny>, file: File) -> PyResult<()> {
     let data = Data::from_object(view)?;
     TURBOPIPE.pipe(data, file);
     Ok(())
 }
 
 #[pyfunction]
-fn sync(view: Py<PyAny>) -> PyResult<()> {
+fn _sync(view: Py<PyAny>) -> PyResult<()> {
     TURBOPIPE.sync(view.as_ptr() as ObjectID);
     Ok(())
 }
 
 #[pyfunction]
-fn close(file: File) -> PyResult<()> {
+fn _close(file: File) -> PyResult<()> {
     TURBOPIPE.close(file);
     Ok(())
 }
 
 #[pymodule(gil_used = false)]
 fn _turbopipe(module: &Bound<'_, PyModule>) -> PyResult<()> {
-    module.add_function(wrap_pyfunction!(pipe, module)?)?;
-    module.add_function(wrap_pyfunction!(sync, module)?)?;
-    module.add_function(wrap_pyfunction!(close, module)?)?;
+    module.add_function(wrap_pyfunction!(_pipe, module)?)?;
+    module.add_function(wrap_pyfunction!(_sync, module)?)?;
+    module.add_function(wrap_pyfunction!(_close, module)?)?;
     Ok(())
 }
