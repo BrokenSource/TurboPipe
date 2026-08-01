@@ -29,16 +29,22 @@ pub struct Work {
 }
 
 impl Data {
-    pub fn from_object(object: Py<PyAny>) -> Self {
+    pub fn from_object(object: Py<PyAny>) -> PyResult<Self> {
         unsafe {
             let mut buffer = pyo3::ffi::Py_buffer::new();
 
             // Stable in >=3.11 for abi3
-            pyo3::ffi::PyObject_GetBuffer(
+            let ret = pyo3::ffi::PyObject_GetBuffer(
                 object.as_ptr(),
                 &mut buffer,
                 pyo3::ffi::PyBUF_SIMPLE,
             );
+
+            if ret != 0 {
+                return Err(pyo3::exceptions::PyTypeError::new_err(
+                    "Couldn't map object into a buffer",
+                ));
+            }
 
             // Get mapped metadata
             let this = Self {
@@ -49,7 +55,7 @@ impl Data {
 
             // Fixme: Works, but is it always valid?
             pyo3::ffi::PyBuffer_Release(&mut buffer);
-            return this;
+            return Ok(this);
         }
     }
 }
@@ -167,7 +173,7 @@ pub static TURBOPIPE: LazyLock<TurboPipe> = LazyLock::new(TurboPipe::new);
 
 #[pyfunction]
 fn pipe(view: Py<PyAny>, file: File) -> PyResult<()> {
-    let data = Data::from_object(view);
+    let data = Data::from_object(view)?;
     TURBOPIPE.pipe(data, file);
     Ok(())
 }
