@@ -115,3 +115,19 @@ ffmpeg.stdin.close()
 ```
 
 See the [<kbd>examples</kbd>](https://github.com/BrokenSource/TurboPipe/tree/main/examples) directory for more, and [ShaderFlow's](https://github.com/BrokenSource/ShaderFlow/blob/main/shaderflow/exporting.py) usage of it!
+
+## Future work
+
+_Design is compromise:_
+
+- Split crate into a pure-rust and pyo3 bindings.
+- Are eternal workers heavy on scheduling resources? [^eternal]
+- Support untracked writes without waitgroup overhead. [^untracked]
+- Store `Py_buffer` in `Work` and release in the worker (correctness).
+- Support synchronizing all queued writes in a file descriptor. [^sync-all]
+
+[^eternal]: Stopping workers midway has non-trivial concurrency problems, like needing a new WaitGroup per file descriptor to block `.pipe()` creating a new thread while due exiting (unecessary overhead).
+
+[^untracked]: Simple to implement, but most realistic usage needs to sync at some point, and reutilize buffers. Strong argument is to not create an ephemeral waitgroup overhead.
+
+[^sync-all]: Nice for minimal code or rotating/untrackable/dangling data sources, however the decision was _know your data-first_, controlling the truth for pipes and syncs.
