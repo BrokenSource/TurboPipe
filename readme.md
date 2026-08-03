@@ -1,7 +1,7 @@
 <div align="center">
   <img src="https://raw.githubusercontent.com/BrokenSource/TurboPipe/main/website/assets/logo.png" width="200">
   <h1>TurboPipe</h1>
-  Fast memoryview data piping
+  Fast data piping for python
   <br><br>
   <a href="https://pypi.org/project/turbopipe/"><img src="https://img.shields.io/pypi/v/turbopipe?label=PyPI&color=blue"></a>
   <a href="https://pypi.org/project/turbopipe/"><img src="https://img.shields.io/pypi/dw/turbopipe?label=Installs&color=blue"></a>
@@ -38,13 +38,17 @@ dependencies = ["turbopipe"]
 
 ## 🚀 Usage
 
+Send any object that implements [`memoryview()`](https://docs.python.org/3/library/stdtypes.html#memoryview) (but not them directly!)[^inputs]
+
+[^inputs]: According to the Python [docs on buffers](https://docs.python.org/3/c-api/buffer.html#c.PyObject_GetBuffer), the `view->obj` is a reference to the _exporter_, so using `pipe(memoryview(data), file)` there is no way for turbopipe to know who is the original `data` object for synchronization methods (only the ephemeral memoryview).
+
 ### Foundations
 
 On its simplest form, the two are equivalent:
 
 ```python
 # Whatever data you can get a memoryview
-data = memoryview(os.urandom(1000))
+data = os.urandom(1000)
 
 with open("/dev/null", "wb") as stream:
 
@@ -75,7 +79,7 @@ turbopipe.pipe(data, process.stdin.fileno())
 
 ### ModernGL
 
-Framebuffers expose their data with the internal `.mglo` object:
+Framebuffers [expose their data](https://github.com/moderngl/moderngl/blob/b713b96a83735e7e459d25681e4841780eae124f/src/moderngl.cpp#L1399-L1430) with the internal `.mglo` object:
 
 ```python
 import moderngl
@@ -84,7 +88,7 @@ ctx = moderngl.create_standalone_context()
 buf = ctx.buffer(reserve=1000)
 
 # Send to FFmpeg, named pipes, raw data files
-turbopipe.pipe(memoryview(buf.mglo), fileno)
+turbopipe.pipe(buf.mglo, fileno)
 ```
 
 However, TurboPipe shines in large data transfers for video encoding:
@@ -101,16 +105,16 @@ while not scene.finished:
     scene.render_frame()
 
     # Waits on all pending pipes in this buffer
-    turbopipe.sync(memoryview(buffer.mglo))
+    turbopipe.sync(buffer.mglo)
 
     # Copy data so the next frame can be pre-rendered
     scene.fbo.read_into(buffer)
 
     # Queue the write into a worker thread
-    turbopipe.pipe(memoryview(buffer.mglo, fileno))
+    turbopipe.pipe(buffer.mglo, fileno)
 
 # Sync all buffers, cleanup, etc.
-turbopipe.sync(memoryview(buffer.mglo))
+turbopipe.sync(buffer.mglo)
 ffmpeg.stdin.close()
 ```
 

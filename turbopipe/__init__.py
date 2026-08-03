@@ -1,6 +1,6 @@
 from typing import Any
 
-from turbopipe._turbopipe import _done, _pipe, _stop, _sync
+from turbopipe._turbopipe import _done, _pipe, _sync
 
 __about__   = "🌀 Fast data piping for python"
 __package__ = "turbopipe"
