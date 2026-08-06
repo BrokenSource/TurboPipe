@@ -146,9 +146,6 @@ impl TurboPipe {
 
                 written += tell as Length;
             }
-
-            // Signal work done
-            drop(work.sync);
         }
     }
 
