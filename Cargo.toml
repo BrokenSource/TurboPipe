@@ -14,7 +14,7 @@ crate-type = ["cdylib"]
 
 [dependencies]
 crossbeam-channel = "0.5"
-dashmap = "6.2"
+dashmap = {version="6.2", features=["inline"]}
 libc = "0.2"
 
 [dependencies.pyo3]
