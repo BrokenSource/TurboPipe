@@ -9,25 +9,23 @@
   <a href="https://discord.gg/KjqvcYwRHm"><img src="https://img.shields.io/discord/1184696441298485370?label=Discord&style=flat&color=purple"></a>
 </div>
 
-## 🔥 Description
+## Description
 
-> TurboPipe speeds up sending raw bytes from `moderngl.Buffer` objects primarily to `FFmpeg` subprocess
+> TurboPipe primarily speeds up sending raw bytes from `moderngl.Buffer` into FFmpeg subprocesses
 
-The **optimizations** involved are:
+Features and optimizations:
 
-- **Zero-copy**: Avoid unnecessary memory copies or allocation (intermediate `buffer.read()`)
-- **Chunks**: Write in blocks of 8192 bytes (RAM page size), so the hardware is happy (Unix)
-- **Threaded**:
-  - Doesn't block the Python GIL, allows to render next frame
+- **Zero-copy**: Calls `libc::write` syscall in pointer math, avoiding intermediate allocations
+- **Rust**: Optimized crates like [`crossbeam`](https://crates.io/crates/crossbeam) and [`dashmap`](https://crates.io/crates/dashmap) for channels and data structures
+- **Chunks**: Write in blocks of 8192 bytes, so the kernel is happy for IPC pipes (Unix)
+- **Threading**:
+  - Doesn't block the Python GIL, allows to render next frame async
   - Decouples the main thread from the I/O thread for performance
-- **Rust**: The core of TurboPipe is written in Rust for speed, efficiency and low-level control
 - **Safe**: Guarantees order, blocks if the memory is queued on any pipe
 
 <sub><b>Note</b>: Also check out [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow), where TurboPipe shines! 😉</sub>
 
-<br>
-
-## 📦 Installation
+## Installation
 
 Simply add the [`turbopipe`](https://pypi.org/project/turbopipe/) PyPI package to your `pyproject.toml`:
 
@@ -36,7 +34,7 @@ Simply add the [`turbopipe`](https://pypi.org/project/turbopipe/) PyPI package t
 dependencies = ["turbopipe"]
 ```
 
-## 🚀 Usage
+## Usage
 
 Send any object that implements [`memoryview()`](https://docs.python.org/3/library/stdtypes.html#memoryview) (but not them directly!)[^inputs]
 
@@ -115,6 +113,7 @@ while not scene.finished:
 
 # Sync all buffers, cleanup, etc.
 turbopipe.sync(buffer.mglo)
+turbopipe.done(buffer.mglo)
 ffmpeg.stdin.close()
 ```
 

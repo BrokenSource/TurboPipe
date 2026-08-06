@@ -14,9 +14,9 @@ requires = ["maturin>=1.9,<2.0"]
 build-backend = "maturin"
 
 [tool.maturin]
-features    = ["pyo3/extension-module"]
 module-name = "turbopipe._turbopipe"
+features = ["turbopipe/python"]
 
 [tool.maturin.generate-ci.github]
-trusted-publishing = true
 publishing-environment = "release"
+trusted-publishing = true

@@ -13,16 +13,20 @@ path = "turbopipe/lib.rs"
 crate-type = ["cdylib"]
 
 [dependencies]
-crossbeam-channel = "0.5.16"
+crossbeam-channel = "0.5"
 dashmap = "6.2"
 libc = "0.2"
 
 [dependencies.pyo3]
 version = "0.29"
+optional = true
 features = [
     "abi3-py311",
     "abi3t",
 ]
+
+[features]
+python = ["dep:pyo3"]
 
 [profile.dev]
 strip = true
