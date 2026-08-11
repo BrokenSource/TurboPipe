@@ -16,11 +16,9 @@
 Features and optimizations:
 
 - **Zero-copy**: Calls `libc::write` syscall in pointer math, avoiding intermediate allocations
-- **Rust**: Optimized crates like [`crossbeam`](https://crates.io/crates/crossbeam) and [`dashmap`](https://crates.io/crates/dashmap) for channels and data structures
+- **Rust**: Optimized crates like [`crossbeam`](https://crates.io/crates/crossbeam-channel) and [`dashmap`](https://crates.io/crates/dashmap) for channels and data structures
 - **Chunks**: Write in blocks of 8192 bytes, so the kernel is happy for IPC pipes (Unix)
-- **Threading**:
-  - Doesn't block the Python GIL, allows to render next frame async
-  - Decouples the main thread from the I/O thread for performance
+- **Threading**: Doesn't block the Python GIL, allows to render next frame async
 - **Safe**: Guarantees order, blocks if the memory is queued on any pipe
 
 <sub><b>Note</b>: Also check out [**ShaderFlow**](https://github.com/BrokenSource/ShaderFlow), where TurboPipe shines! 😉</sub>
@@ -67,7 +65,7 @@ from subprocess import PIPE, Popen
 
 # Must have stdin or named pipes
 process = subprocess.Popen(
-    ("sh", "-c", "cat > /dev/null"]),
+    ("sh", "-c", "cat > /dev/null"),
     stdin=PIPE,
 )
 
