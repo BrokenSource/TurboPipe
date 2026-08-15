@@ -15,7 +15,7 @@ build-backend = "maturin"
 
 [tool.maturin]
 module-name = "turbopipe._turbopipe"
-features = ["turbopipe/python"]
+features = ["turbopipe/pyo3"]
 
 [tool.maturin.generate-ci.github]
 publishing-environment = "release"

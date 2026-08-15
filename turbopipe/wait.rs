@@ -52,6 +52,7 @@ impl WaitGroup {
         }
 
         let mut guard = inner.lock.lock().unwrap();
+
         while inner.count.load(Ordering::Acquire) != 0 {
             guard = inner.cvar.wait(guard).unwrap();
         }
