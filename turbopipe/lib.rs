@@ -104,17 +104,6 @@ impl TurboPipe {
         sender.send(Some(work)).expect("Send failed");
     }
 
-    /// Controls the chunk size in bytes a worker writes
-    pub fn chunk() -> usize {
-        static VALUE: LazyLock<usize> = LazyLock::new(|| {
-            std::env::var("TURBOPIPE_CHUNK_SIZE")
-                .ok()
-                .and_then(|v| v.parse().ok())
-                .unwrap_or(if cfg!(windows) { usize::MAX } else { 8192 })
-        });
-        *VALUE
-    }
-
     /// Eternally reads and writes a work's data to the bound file descriptor.
     ///
     /// Safety:
@@ -122,6 +111,12 @@ impl TurboPipe {
     /// - Poison-pill implementation with Option<Work>
     ///
     fn worker(receiver: Receiver<Option<Work>>, file: File) {
+
+        // Controls the chunk size in bytes a worker writes
+        let chunk = std::env::var("TURBOPIPE_CHUNK_SIZE")
+            .ok().and_then(|v| v.parse().ok())
+            .unwrap_or(if cfg!(windows) { usize::MAX } else { 8192 });
+
         while let Ok(Some(work)) = receiver.recv() {
             let mut written = 0;
 
@@ -133,7 +128,7 @@ impl TurboPipe {
                         file as libc::c_int,
                         (work.data.ptr as *const u8).add(written).cast(),
                         (work.data.len - written)
-                            .min(Self::chunk())
+                            .min(chunk)
                             .try_into()
                             .unwrap(),
                     )
